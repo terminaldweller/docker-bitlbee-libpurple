@@ -2,7 +2,11 @@ FROM debian:bullseye-slim as base-image
 
 FROM base-image as bitlbee-build
 
-ARG BITLBEE_VERSION
+ARG BITLBEE_VERSION=3.6-1
+ENV ALL_PROXY=socks5h://192.168.1.214:9995
+
+RUN echo Acquire::http::Proxy "socks5h://192.168.1.214:9995"; >> /etc/apt/apt.conf.d/proxy.conf
+RUN echo Acquire::https::Proxy "socks5h://192.168.1.214:9995"; >> /etc/apt/apt.conf.d/proxy.conf
 
 RUN apt-get update \
  && apt-get install -y --no-install-recommends \
@@ -175,7 +179,8 @@ RUN echo SLACK=${SLACK} > /tmp/status \
      then cd /tmp \
        && git clone -n https://github.com/dylex/slack-libpurple.git \
        && cd slack-libpurple \
-       && git checkout ${SLACK_VERSION} \
+       && git fetch origin pull/162/head:162 \
+       && git checkout 162 \
        && make -j$(nproc --ignore 2) \
        && install -d /usr/share/pixmaps/pidgin/protocols/{16,22,48} \
        && make install \
@@ -312,19 +317,22 @@ RUN echo MATRIX=${MATRIX} > /tmp/status \
 FROM bitlbee-build as signald-build
 
 ARG SIGNAL=1
-ARG SIGNAL_VERSION
+ARG SIGNAL_VERSION=master
 
 RUN echo SIGNAL=${SIGNAL} > /tmp/status \
  && if [ ${SIGNAL} -eq 1 ]; \
      then cd /tmp \
        && apt-get update \
-       && apt-get install -y --no-install-recommends libmagic-dev \
-       && git clone -n https://github.com/hoehermann/libpurple-signald \
-       && cd libpurple-signald \
+       && apt-get install -y --no-install-recommends cmake \
+       && git clone -n https://github.com/hoehermann/purple-signald \
+       && cd purple-signald \
        && git checkout ${SIGNAL_VERSION} \
        && git submodule init \
        && git submodule update \
-       && make -j$(nproc --ignore 2) SUPPORT_EXTERNAL_ATTACHMENTS=1 \
+       && mkdir -p build \
+       && cd build \
+       && cmake .. \
+       && make -j$(nproc --ignore 2) \
        && make install \
        && strip /usr/lib/purple-2/libsignald.so; \
      else mkdir -p /usr/lib/purple-2 \
@@ -358,6 +366,9 @@ FROM bitlbee-build as whatsapp-build
 ARG WHATSAPP=1
 ARG WHATSAPP_VERSION
 
+ENV ALL_PROXY=socks5h://192.168.1.214:9990
+RUN echo 'Acquire::http::Proxy "socks5h://192.168.1.214:9995";' > /etc/apt/apt.conf.d/proxy.conf && \
+      echo 'Acquire::https::Proxy "socks5h://192.168.1.214:9995";' >> /etc/apt/apt.conf.d/proxy.conf
 RUN echo WHATSAPP=${WHATSAPP} > /tmp/status \
  && if [ ${WHATSAPP} -eq 1 ]; \
      then cd /tmp \
@@ -367,7 +378,7 @@ RUN echo WHATSAPP=${WHATSAPP} > /tmp/status \
        && apt-get install -y --no-install-recommends cmake pkg-config \
        && git clone -n https://github.com/hoehermann/purple-gowhatsapp.git \
        && cd purple-gowhatsapp \
-       && git checkout ${WHATSAPP_VERSION} \
+       && git checkout whatsmeow \
        && mkdir build \
        && cd build \
        && cmake .. \
@@ -376,6 +387,32 @@ RUN echo WHATSAPP=${WHATSAPP} > /tmp/status \
        && strip /usr/lib/purple-2/libwhatsmeow.so; \
      else mkdir -p /usr/lib/purple-2 \
        && ln -sf /nowhere /usr/lib/purple-2/libwhatsmeow.so; \
+    fi
+
+# ---
+
+FROM bitlbee-build as lurch-build
+
+ARG LURCH=1
+ARG LURCH_VERSION=master
+
+ENV ALL_PROXY=socks5h://192.168.1.214:9990
+RUN echo 'Acquire::http::Proxy "socks5h://192.168.1.214:9995";' > /etc/apt/apt.conf.d/proxy.conf && \
+      echo 'Acquire::https::Proxy "socks5h://192.168.1.214:9995";' >> /etc/apt/apt.conf.d/proxy.conf
+RUN echo LURCH=${LURCH} > /tmp/status \
+ && if [ ${LURCH} -eq 1 ]; \
+     then cd /tmp \
+       && echo "deb http://deb.debian.org/debian bullseye-backports main" | tee -a /etc/apt/sources.list \
+       && apt-get update \
+       && apt-get install -y git cmake libpurple-dev libmxml-dev libxml2-dev libsqlite3-dev libgcrypt20-dev build-essential \
+       && git clone -n https://github.com/gkdr/lurch \
+       && cd lurch \
+       && git checkout ${LURCH_VERSION} \
+       && git submodule update --init --recursive \
+       && make \
+       && cp /tmp/lurch/build/lurch.so /usr/lib/purple-2/lurch.so ; \
+     else mkdir -p /usr/lib/purple-2 \
+       && ln -sf /nowhere /usr/lib/purple-2/liblurch.so; \
     fi
 
 # ---
@@ -444,6 +481,9 @@ COPY --from=icyque-build /tmp/status /tmp/plugin/icyque
 COPY --from=whatsapp-build /usr/lib/purple-2/libwhatsmeow.so /tmp/usr/lib/purple-2/libwhatsmeow.so
 COPY --from=whatsapp-build /tmp/status /tmp/plugin/whatsapp
 
+COPY --from=lurch-build /usr/lib/purple-2/lurch.so /tmp/usr/lib/purple-2/lurch.so
+COPY --from=lurch-build /tmp/status /tmp/plugin/lurch
+
 RUN apt-get update \
  && apt-get install -y --no-install-recommends findutils \
  && find /tmp/ -type f -empty -delete \
@@ -464,6 +504,8 @@ SHELL [ "/bin/bash", "-c" ]
 RUN groupadd -g 101 -r bitlbee \
  && useradd -u 101 -r -g bitlbee -m -d /var/lib/bitlbee bitlbee \
  && install -d -m 750 -o bitlbee -g bitlbee /var/lib/bitlbee \
+ && groupadd -g 102 -r signald \
+ && usermod -aG signald bitlbee \
  && source /plugins \
  && if [ ${OTR} -eq 1 ]; then PKGS="${PKGS} libotr5"; fi \
  && if [ ${FACEBOOK} -eq 1 ] || [ ${SKYPEWEB} -eq 1 ] || [ ${HANGOUTS} -eq 1 ] \
@@ -476,11 +518,13 @@ RUN groupadd -g 101 -r bitlbee \
  && if [ ${SIPE} -eq 1 ]; then PKGS="${PKGS} libxml2"; fi \
  && if [ ${ROCKETCHAT} -eq 1 ]; then PKGS="${PKGS} libmarkdown2"; fi \
  && if [ ${MATRIX} -eq 1 ]; then PKGS="${PKGS} libsqlite3-0 libhttp-parser2.9 libolm2"; fi \
+ && if [ ${LURCH} -eq 1 ]; then PKGS="${PKGS} libxml2 libmxml1 libsqlite3-0 libgcrypt20"; fi \
  && apt-get update \
  && apt-get install -y --no-install-recommends ${PKGS} \
  && apt-get clean \
  && rm /plugins
 
+ENV ALL_PROXY=
 EXPOSE 6667
 
-CMD [ "/usr/sbin/bitlbee", "-F", "-n", "-u", "bitlbee" ]
+# CMD [ "/usr/sbin/bitlbee", "-F", "-n", "-u", "bitlbee" ]
