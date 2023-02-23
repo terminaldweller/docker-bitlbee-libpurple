@@ -341,6 +341,28 @@ RUN echo SIGNAL=${SIGNAL} > /tmp/status \
 
 # ---
 
+FROM bitlbee-build as mattermost-build
+
+ARG MATTERMOST=1
+ARG MATTERMOST_VERSION=v2.1
+
+RUN echo MATTERMOST=${MATTERMOST} > /tmp/status \
+ && if [ ${MATTERMOST} -eq 1 ]; \
+     then cd /tmp \
+       && apt-get update \
+       && apt-get install -y libjson-glib-dev libglib2.0-dev git make libmarkdown2-dev build-essential \
+       && git clone https://github.com/EionRobb/purple-mattermost.git \
+       && cd purple-mattermost \
+       && git checkout ${MATTERMOST_VERSION} \
+       && make -j$(nproc --ignore 2) \
+       && make install \
+       && strip /usr/lib/purple-2/libmattermost.so; \
+     else mkdir -p /usr/lib/purple-2 \
+       && ln -sf /nowhere /usr/lib/purple-2/libmattermost.so; \
+    fi
+
+# ---
+
 FROM bitlbee-build as icyque-build
 
 ARG ICYQUE=1
@@ -483,6 +505,9 @@ COPY --from=whatsapp-build /tmp/status /tmp/plugin/whatsapp
 
 COPY --from=lurch-build /usr/lib/purple-2/lurch.so /tmp/usr/lib/purple-2/lurch.so
 COPY --from=lurch-build /tmp/status /tmp/plugin/lurch
+
+COPY --from=mattermost-build /usr/lib/purple-2/libmattermost.so /tmp/usr/lib/purple-2/libmattermost.so
+COPY --from=mattermost-build /tmp/status /tmp/plugin/mattermost
 
 RUN apt-get update \
  && apt-get install -y --no-install-recommends findutils \
