@@ -3,10 +3,6 @@ FROM debian:bullseye-slim as base-image
 FROM base-image as bitlbee-build
 
 ARG BITLBEE_VERSION=3.6-1
-ENV ALL_PROXY=socks5h://192.168.1.214:9995
-
-RUN echo Acquire::http::Proxy "socks5h://192.168.1.214:9995"; >> /etc/apt/apt.conf.d/proxy.conf
-RUN echo Acquire::https::Proxy "socks5h://192.168.1.214:9995"; >> /etc/apt/apt.conf.d/proxy.conf
 
 RUN apt-get update \
  && apt-get install -y --no-install-recommends \
@@ -116,7 +112,7 @@ RUN echo TELEGRAM=${TELEGRAM} > /tmp/status \
      then cd /tmp \
        && apt-get update \
        && apt-get install -y --no-install-recommends cmake gperf libwebp-dev libpng-dev \
-       && git clone -n https://github.com/ars3niy/tdlib-purple.git \
+       && git clone -n https://github.com/BenWiederhake/tdlib-purple/ \
        && cd tdlib-purple \
        && git checkout ${TELEGRAM_VERSION} \
        && TDLIB_REQ_VERSION=$(grep -o "tdlib version.*" CMakeLists.txt| tail -1 | awk '{print $3}') \
@@ -193,7 +189,7 @@ RUN echo SLACK=${SLACK} > /tmp/status \
 
 FROM bitlbee-build as sipe-build
 
-ARG SIPE=1
+ARG SIPE=0
 ARG SIPE_VERSION
 
 RUN echo SIPE=${SIPE} > /tmp/status \
@@ -388,23 +384,22 @@ FROM bitlbee-build as whatsapp-build
 ARG WHATSAPP=1
 ARG WHATSAPP_VERSION
 
-ENV ALL_PROXY=socks5h://192.168.1.214:9990
-RUN echo 'Acquire::http::Proxy "socks5h://192.168.1.214:9995";' > /etc/apt/apt.conf.d/proxy.conf && \
-      echo 'Acquire::https::Proxy "socks5h://192.168.1.214:9995";' >> /etc/apt/apt.conf.d/proxy.conf
 RUN echo WHATSAPP=${WHATSAPP} > /tmp/status \
  && if [ ${WHATSAPP} -eq 1 ]; \
      then cd /tmp \
        && echo "deb http://deb.debian.org/debian bullseye-backports main" | tee -a /etc/apt/sources.list \
        && apt-get update \
-       && apt-get install -y --no-install-recommends -t bullseye-backports golang-go \
-       && apt-get install -y --no-install-recommends cmake pkg-config \
-       && git clone -n https://github.com/hoehermann/purple-gowhatsapp.git \
+       && apt-get install -y -t bullseye-backports golang-1.19 \
+       && apt-get install -y --no-install-recommends cmake pkg-config libgdk-pixbuf2.0-dev libopusfile-dev \
+       && git clone https://github.com/hoehermann/purple-gowhatsapp.git \
        && cd purple-gowhatsapp \
-       && git checkout whatsmeow \
+       && git checkout v1.13.0 \
+       && git submodule update --init \
+	&& export PATH=$PATH:/usr/lib/go-1.19/bin \
        && mkdir build \
        && cd build \
        && cmake .. \
-       && make -j$(nproc --ignore 2) \
+       && cmake -DCMAKE_Go_COMPILER=/usr/lib/go-1.19/bin/go -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON --build . \
        && make install/strip \
        && strip /usr/lib/purple-2/libwhatsmeow.so; \
      else mkdir -p /usr/lib/purple-2 \
@@ -418,9 +413,6 @@ FROM bitlbee-build as lurch-build
 ARG LURCH=1
 ARG LURCH_VERSION=master
 
-ENV ALL_PROXY=socks5h://192.168.1.214:9990
-RUN echo 'Acquire::http::Proxy "socks5h://192.168.1.214:9995";' > /etc/apt/apt.conf.d/proxy.conf && \
-      echo 'Acquire::https::Proxy "socks5h://192.168.1.214:9995";' >> /etc/apt/apt.conf.d/proxy.conf
 RUN echo LURCH=${LURCH} > /tmp/status \
  && if [ ${LURCH} -eq 1 ]; \
      then cd /tmp \
@@ -543,13 +535,13 @@ RUN groupadd -g 101 -r bitlbee \
  && if [ ${SIPE} -eq 1 ]; then PKGS="${PKGS} libxml2"; fi \
  && if [ ${ROCKETCHAT} -eq 1 ]; then PKGS="${PKGS} libmarkdown2"; fi \
  && if [ ${MATRIX} -eq 1 ]; then PKGS="${PKGS} libsqlite3-0 libhttp-parser2.9 libolm2"; fi \
+ && if [ ${WHATSAPP} -eq 1 ]; then PKGS="${PKGS} libgdk-pixbuf2.0-dev libopusfile-dev"; fi \
  && if [ ${LURCH} -eq 1 ]; then PKGS="${PKGS} libxml2 libmxml1 libsqlite3-0 libgcrypt20"; fi \
  && apt-get update \
  && apt-get install -y --no-install-recommends ${PKGS} \
  && apt-get clean \
  && rm /plugins
 
-ENV ALL_PROXY=
 EXPOSE 6667
 
 # CMD [ "/usr/sbin/bitlbee", "-F", "-n", "-u", "bitlbee" ]
