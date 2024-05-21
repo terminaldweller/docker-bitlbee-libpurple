@@ -39,7 +39,7 @@ RUN echo OTR=${OTR} > /tmp/status \
 
 FROM bitlbee-build as facebook-build
 
-ARG FACEBOOK=1
+ARG FACEBOOK=0
 ARG FACEBOOK_VERSION
 
 RUN echo FACEBOOK=${FACEBOOK} > /tmp/status \
@@ -61,7 +61,7 @@ RUN echo FACEBOOK=${FACEBOOK} > /tmp/status \
 
 FROM bitlbee-build as steam-build
 
-ARG STEAM=1
+ARG STEAM=0
 ARG STEAM_VERSION
 
 RUN echo STEAM=${STEAM} > /tmp/status \
@@ -105,7 +105,7 @@ RUN echo SKYPEWEB=${SKYPEWEB} > /tmp/status \
 FROM bitlbee-build as telegram-build
 
 ARG TELEGRAM=1
-ARG TELEGRAM_VERSION
+ARG TELEGRAM_VERSION=v0.8.1
 
 RUN echo TELEGRAM=${TELEGRAM} > /tmp/status \
  && if [ ${TELEGRAM} -eq 1 ]; \
@@ -143,7 +143,7 @@ RUN echo TELEGRAM=${TELEGRAM} > /tmp/status \
 
 FROM bitlbee-build as hangouts-build
 
-ARG HANGOUTS=1
+ARG HANGOUTS=0
 ARG HANGOUTS_VERSION
 
 RUN echo HANGOUTS=${HANGOUTS} > /tmp/status \
@@ -239,7 +239,7 @@ RUN echo DISCORD=${DISCORD} > /tmp/status \
 
 FROM bitlbee-build as rocketchat-build
 
-ARG ROCKETCHAT=1
+ARG ROCKETCHAT=0
 ARG ROCKETCHAT_VERSION
 
 RUN echo ROCKETCHAT=${ROCKETCHAT} > /tmp/status \
@@ -285,7 +285,7 @@ RUN echo MASTODON=${MASTODON} > /tmp/status \
 
 FROM bitlbee-build as matrix-build
 
-ARG MATRIX=1
+ARG MATRIX=0
 ARG MATRIX_VERSION
 
 SHELL [ "/bin/bash", "-c" ]
@@ -312,7 +312,7 @@ RUN echo MATRIX=${MATRIX} > /tmp/status \
 
 FROM bitlbee-build as signald-build
 
-ARG SIGNAL=1
+ARG SIGNAL=0
 ARG SIGNAL_VERSION=master
 
 RUN echo SIGNAL=${SIGNAL} > /tmp/status \
@@ -361,7 +361,7 @@ RUN echo MATTERMOST=${MATTERMOST} > /tmp/status \
 
 FROM bitlbee-build as icyque-build
 
-ARG ICYQUE=1
+ARG ICYQUE=0
 ARG ICYQUE_VERSION
 
 RUN echo ICYQUE=${ICYQUE} > /tmp/status \
@@ -382,20 +382,25 @@ RUN echo ICYQUE=${ICYQUE} > /tmp/status \
 FROM bitlbee-build as whatsapp-build
 
 ARG WHATSAPP=1
-ARG WHATSAPP_VERSION
+ARG WHATSAPP_VERSION=v1.12.0
 
 RUN echo WHATSAPP=${WHATSAPP} > /tmp/status \
  && if [ ${WHATSAPP} -eq 1 ]; \
      then cd /tmp \
+      && apt-get install -y wget \
+      && wget https://go.dev/dl/go1.21.10.linux-amd64.tar.gz \
+      && tar -C /usr/local -xzf go1.21.10.linux-amd64.tar.gz \
        && echo "deb http://deb.debian.org/debian bullseye-backports main" | tee -a /etc/apt/sources.list \
        && apt-get update \
-       && apt-get install -y -t bullseye-backports golang-1.19 \
+       # && apt-get install -y -t bullseye-backports golang-1.19 \
+      && apt-get install -y -t bullseye-backports \
        && apt-get install -y --no-install-recommends cmake pkg-config libgdk-pixbuf2.0-dev libopusfile-dev \
-       && git clone https://github.com/hoehermann/purple-gowhatsapp.git \
+       && git clone -n https://github.com/hoehermann/purple-gowhatsapp.git \
        && cd purple-gowhatsapp \
-       && git checkout v1.13.0 \
+       && git checkout ${WHATSAPP_VERSION} \
+       # && export PATH=$PATH:/usr/lib/go-1.19/bin \
+       && export PATH=$PATH:/usr/local/go/bin \
        && git submodule update --init \
-	&& export PATH=$PATH:/usr/lib/go-1.19/bin \
        && mkdir build \
        && cd build \
        && cmake .. \
@@ -410,7 +415,7 @@ RUN echo WHATSAPP=${WHATSAPP} > /tmp/status \
 
 FROM bitlbee-build as lurch-build
 
-ARG LURCH=1
+ARG LURCH=0
 ARG LURCH_VERSION=master
 
 RUN echo LURCH=${LURCH} > /tmp/status \
@@ -443,13 +448,13 @@ COPY --from=bitlbee-build /etc/bitlbee /tmp/etc/bitlbee
 COPY --from=otr-install /usr/lib/bitlbee/otr.so /tmp/usr/lib/bitlbee/otr.so
 COPY --from=otr-install /tmp/status /tmp/plugin/otr
 
-COPY --from=facebook-build /usr/lib/bitlbee/facebook.so /tmp/usr/lib/bitlbee/facebook.so
-COPY --from=facebook-build /usr/lib/bitlbee/facebook.la /tmp/usr/lib/bitlbee/facebook.la
-COPY --from=facebook-build /tmp/status /tmp/plugin/facebook
+# COPY --from=facebook-build /usr/lib/bitlbee/facebook.so /tmp/usr/lib/bitlbee/facebook.so
+# COPY --from=facebook-build /usr/lib/bitlbee/facebook.la /tmp/usr/lib/bitlbee/facebook.la
+# COPY --from=facebook-build /tmp/status /tmp/plugin/facebook
 
-COPY --from=steam-build /usr/lib/bitlbee/steam.so /tmp/usr/lib/bitlbee/steam.so
-COPY --from=steam-build /usr/lib/bitlbee/steam.la /tmp/usr/lib/bitlbee/steam.la
-COPY --from=steam-build /tmp/status /tmp/plugin/steam
+# COPY --from=steam-build /usr/lib/bitlbee/steam.so /tmp/usr/lib/bitlbee/steam.so
+# COPY --from=steam-build /usr/lib/bitlbee/steam.la /tmp/usr/lib/bitlbee/steam.la
+# COPY --from=steam-build /tmp/status /tmp/plugin/steam
 
 COPY --from=skypeweb-build /usr/lib/purple-2/libskypeweb.so /tmp/usr/lib/purple-2/libskypeweb.so
 COPY --from=skypeweb-build /tmp/status /tmp/plugin/skypeweb
@@ -459,44 +464,44 @@ COPY --from=telegram-build /usr/local/share/metainfo/tdlib-purple.metainfo.xml /
 COPY --from=telegram-build /usr/local/share/locale /tmp/usr/local/share/locale
 COPY --from=telegram-build /tmp/status /tmp/plugin/telegram
 
-COPY --from=hangouts-build /usr/lib/purple-2/libhangouts.so /tmp/usr/lib/purple-2/libhangouts.so
-COPY --from=hangouts-build /tmp/status /tmp/plugin/hangouts
+# COPY --from=hangouts-build /usr/lib/purple-2/libhangouts.so /tmp/usr/lib/purple-2/libhangouts.so
+# COPY --from=hangouts-build /tmp/status /tmp/plugin/hangouts
 
 COPY --from=slack-build /usr/lib/purple-2/libslack.so /tmp/usr/lib/purple-2/libslack.so
 COPY --from=slack-build /tmp/status /tmp/plugin/slack
 
-COPY --from=sipe-build /usr/lib/purple-2/libsipe.so /tmp/usr/lib/purple-2/libsipe.so
-COPY --from=sipe-build /usr/lib/purple-2/libsipe.la /tmp/usr/lib/purple-2/libsipe.la
-COPY --from=sipe-build /usr/share/locale /tmp/usr/share/locale
-COPY --from=sipe-build /tmp/status /tmp/plugin/sipe
+# COPY --from=sipe-build /usr/lib/purple-2/libsipe.so /tmp/usr/lib/purple-2/libsipe.so
+# COPY --from=sipe-build /usr/lib/purple-2/libsipe.la /tmp/usr/lib/purple-2/libsipe.la
+# COPY --from=sipe-build /usr/share/locale /tmp/usr/share/locale
+# COPY --from=sipe-build /tmp/status /tmp/plugin/sipe
 
 COPY --from=discord-build /usr/lib/bitlbee/discord.so /tmp/usr/lib/bitlbee/discord.so
 COPY --from=discord-build /usr/lib/bitlbee/discord.la /tmp/usr/lib/bitlbee/discord.la
 COPY --from=discord-build /usr/share/bitlbee/discord-help.txt /tmp/usr/share/bitlbee/discord-help.txt
 COPY --from=discord-build /tmp/status /tmp/plugin/discord
 
-COPY --from=rocketchat-build /usr/lib/purple-2/librocketchat.so /tmp/usr/lib/purple-2/librocketchat.so
-COPY --from=rocketchat-build /tmp/status /tmp/plugin/rocketchat
+# COPY --from=rocketchat-build /usr/lib/purple-2/librocketchat.so /tmp/usr/lib/purple-2/librocketchat.so
+# COPY --from=rocketchat-build /tmp/status /tmp/plugin/rocketchat
 
 COPY --from=mastodon-build /usr/lib/bitlbee/mastodon.so /tmp/usr/lib/bitlbee/mastodon.so
 COPY --from=mastodon-build /usr/lib/bitlbee/mastodon.la /tmp/usr/lib/bitlbee/mastodon.la
 COPY --from=mastodon-build /usr/share/bitlbee/mastodon-help.txt /tmp/usr/share/bitlbee/mastodon-help.txt
 COPY --from=mastodon-build /tmp/status /tmp/plugin/mastodon
 
-COPY --from=matrix-build /usr/lib/purple-2/libmatrix.so /tmp/usr/lib/purple-2/libmatrix.so
-COPY --from=matrix-build /tmp/status /tmp/plugin/matrix
+# COPY --from=matrix-build /usr/lib/purple-2/libmatrix.so /tmp/usr/lib/purple-2/libmatrix.so
+# COPY --from=matrix-build /tmp/status /tmp/plugin/matrix
 
-COPY --from=signald-build /usr/lib/purple-2/libsignald.so /tmp/usr/lib/purple-2/libsignald.so
-COPY --from=signald-build /tmp/status /tmp/plugin/signald
+# COPY --from=signald-build /usr/lib/purple-2/libsignald.so /tmp/usr/lib/purple-2/libsignald.so
+# COPY --from=signald-build /tmp/status /tmp/plugin/signald
 
-COPY --from=icyque-build /usr/lib/purple-2/libicyque.so /tmp/usr/lib/purple-2/libicyque.so
-COPY --from=icyque-build /tmp/status /tmp/plugin/icyque
+# COPY --from=icyque-build /usr/lib/purple-2/libicyque.so /tmp/usr/lib/purple-2/libicyque.so
+# COPY --from=icyque-build /tmp/status /tmp/plugin/icyque
 
 COPY --from=whatsapp-build /usr/lib/purple-2/libwhatsmeow.so /tmp/usr/lib/purple-2/libwhatsmeow.so
 COPY --from=whatsapp-build /tmp/status /tmp/plugin/whatsapp
 
-COPY --from=lurch-build /usr/lib/purple-2/lurch.so /tmp/usr/lib/purple-2/lurch.so
-COPY --from=lurch-build /tmp/status /tmp/plugin/lurch
+# COPY --from=lurch-build /usr/lib/purple-2/lurch.so /tmp/usr/lib/purple-2/lurch.so
+# COPY --from=lurch-build /tmp/status /tmp/plugin/lurch
 
 COPY --from=mattermost-build /usr/lib/purple-2/libmattermost.so /tmp/usr/lib/purple-2/libmattermost.so
 COPY --from=mattermost-build /tmp/status /tmp/plugin/mattermost
@@ -532,11 +537,13 @@ RUN groupadd -g 101 -r bitlbee \
  && if [ ${TELEGRAM} -eq 1 ]; then PKGS="${PKGS} zlib1g libwebp6 libpng16-16 libstdc++6"; fi \
  && if [ ${HANGOUTS} -eq 1 ] || [ ${SIGNAL} -eq 1 ]; then PKGS="${PKGS} libprotobuf-c1"; fi \
  && if [ ${SIGNAL} -eq 1 ]; then PKGS="${PKGS} libmagic1"; fi \
+ && if [ ${WHATSAPP} -eq 1 ]; then PKGS="${PKGS} libopusfile-dev libgdk-pixbuf2.0-dev"; fi \
  && if [ ${SIPE} -eq 1 ]; then PKGS="${PKGS} libxml2"; fi \
  && if [ ${ROCKETCHAT} -eq 1 ]; then PKGS="${PKGS} libmarkdown2"; fi \
  && if [ ${MATRIX} -eq 1 ]; then PKGS="${PKGS} libsqlite3-0 libhttp-parser2.9 libolm2"; fi \
  && if [ ${WHATSAPP} -eq 1 ]; then PKGS="${PKGS} libgdk-pixbuf2.0-dev libopusfile-dev"; fi \
  && if [ ${LURCH} -eq 1 ]; then PKGS="${PKGS} libxml2 libmxml1 libsqlite3-0 libgcrypt20"; fi \
+ && PKGS="${PKGS} vim" \
  && apt-get update \
  && apt-get install -y --no-install-recommends ${PKGS} \
  && apt-get clean \
