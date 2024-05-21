@@ -105,33 +105,35 @@ RUN echo SKYPEWEB=${SKYPEWEB} > /tmp/status \
 FROM bitlbee-build as telegram-build
 
 ARG TELEGRAM=1
-ARG TELEGRAM_VERSION=v0.8.1
+ARG TELEGRAM_VERSION=v0.4
 
 RUN echo TELEGRAM=${TELEGRAM} > /tmp/status \
  && if [ ${TELEGRAM} -eq 1 ]; \
      then cd /tmp \
        && apt-get update \
-       && apt-get install -y --no-install-recommends cmake gperf libwebp-dev libpng-dev \
-       && git clone -n https://github.com/BenWiederhake/tdlib-purple/ \
+       && apt-get install -y --no-install-recommends cmake gperf libwebp-dev libpng-dev sudo \
+       && git clone https://github.com/BenWiederhake/tdlib-purple/ \
        && cd tdlib-purple \
-       && git checkout ${TELEGRAM_VERSION} \
-       && TDLIB_REQ_VERSION=$(grep -o "tdlib version.*" CMakeLists.txt| tail -1 | awk '{print $3}') \
-       && cd /tmp \
-       && git clone -n https://github.com/tdlib/td.git tdlib \
-       && cd tdlib \
-       && TDLIB_VERSION=$(git log --pretty=format:"%h%x09%s" | grep "Update version to ${TDLIB_REQ_VERSION}" | awk '{print $1}') \
-       && git checkout ${TDLIB_VERSION} \
-       && mkdir build \
-       && cd build \
-       && cmake -DCMAKE_BUILD_TYPE=Release .. \
-       && make -j$(nproc --ignore 2) \
-       && make install \
-       && cd /tmp/tdlib-purple \
-       && mkdir build \
-       && cd build \
-       && cmake -DTd_DIR=/usr/local/lib/cmake/Td -DNoLottie=True -DNoVoip=True .. \
-       && make -j$(nproc --ignore 2)\
-       && make install \
+       && ./build_and_install.sh \
+       # && cd tdlib-purple \
+       # && git checkout ${TELEGRAM_VERSION} \
+       # && TDLIB_REQ_VERSION=$(grep -o "tdlib version.*" CMakeLists.txt| tail -1 | awk '{print $3}') \
+       # && cd /tmp \
+       # && git clone -n https://github.com/tdlib/td.git tdlib \
+       # && cd tdlib \
+       # && TDLIB_VERSION=$(git log --pretty=format:"%h%x09%s" | grep "Update version to ${TDLIB_REQ_VERSION}" | awk '{print $1}') \
+       # && git checkout ${TDLIB_VERSION} \
+       # && mkdir build \
+       # && cd build \
+       # && cmake -DCMAKE_BUILD_TYPE=Release .. \
+       # && make -j$(nproc --ignore 2) \
+       # && make install \
+       # && cd /tmp/tdlib-purple \
+       # && mkdir build \
+       # && cd build \
+       # && cmake -DTd_DIR=/usr/local/lib/cmake/Td -DNoLottie=True -DNoVoip=True .. \
+       # && make -j$(nproc --ignore 2)\
+       # && make install \
        && strip /usr/lib/purple-2/libtelegram-tdlib.so; \
      else mkdir -p /usr/lib/purple-2 \
        && ln -sf /nowhere /usr/lib/purple-2/libtelegram-tdlib.so \
