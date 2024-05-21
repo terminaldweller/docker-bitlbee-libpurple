@@ -339,7 +339,7 @@ RUN echo SIGNAL=${SIGNAL} > /tmp/status \
 
 FROM bitlbee-build as mattermost-build
 
-ARG MATTERMOST=1
+ARG MATTERMOST=0
 ARG MATTERMOST_VERSION=v2.1
 
 RUN echo MATTERMOST=${MATTERMOST} > /tmp/status \
