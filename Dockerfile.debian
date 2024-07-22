@@ -343,7 +343,7 @@ RUN echo MATRIX=${MATRIX} > /tmp/status \
 
 FROM bitlbee-build AS signal-presage
 
-ARG SIGNAL=1
+ARG SIGNAL=0
 ARG SIGNAL_VERSION=master
 
 RUN echo SIGNAL=${SIGNAL} > /tmp/status \
@@ -522,7 +522,7 @@ COPY --from=mastodon-build /tmp/status /tmp/plugin/mastodon
 # COPY --from=signald-build /tmp/status /tmp/plugin/signald
 
 COPY --from=signal-presage /usr/lib/x86_64-linux-gnu/purple-2/libpresage.so /tmp/usr/lib/bitlbee/libpresage.so
-COPY --from=signal-presage /usr/lib/x86_64-linux-gnu/purple-2/libpurple_presage_backend.a /tmp/usr/lib/bitlbee/libpurple_presage_backend.a
+# COPY --from=signal-presage /usr/lib/x86_64-linux-gnu/purple-2/libpurple_presage_backend.a /tmp/usr/lib/bitlbee/libpurple_presage_backend.a
 
 # COPY --from=icyque-build /usr/lib/x86_64-linux-gnu/purple-2/libicyque.so /tmp/usr/lib/x86_64-linux-gnu/purple-2/libicyque.so
 # COPY --from=icyque-build /tmp/status /tmp/plugin/icyque
