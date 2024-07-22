@@ -1,6 +1,6 @@
-FROM debian:bookworm-slim as base-image
+FROM debian:bookworm-slim AS base-image
 
-FROM base-image as bitlbee-build
+FROM base-image AS bitlbee-build
 
 ARG BITLBEE_VERSION=3.6-1
 
@@ -25,7 +25,7 @@ RUN apt-get update \
 
 # ---
 
-FROM bitlbee-build as otr-install
+FROM bitlbee-build AS otr-install
 
 ARG OTR=1
 
@@ -39,7 +39,7 @@ RUN echo OTR=${OTR} > /tmp/status \
 
 # ---
 
-FROM bitlbee-build as facebook-build
+FROM bitlbee-build AS facebook-build
 
 ARG FACEBOOK=0
 ARG FACEBOOK_VERSION
@@ -61,7 +61,7 @@ RUN echo FACEBOOK=${FACEBOOK} > /tmp/status \
 
 # ---
 
-FROM bitlbee-build as steam-build
+FROM bitlbee-build AS steam-build
 
 ARG STEAM=0
 ARG STEAM_VERSION
@@ -83,7 +83,7 @@ RUN echo STEAM=${STEAM} > /tmp/status \
 
 # ---
 
-FROM bitlbee-build as skypeweb-build
+FROM bitlbee-build AS skypeweb-build
 
 ARG SKYPEWEB=1
 ARG SKYPEWEB_VERSION
@@ -104,7 +104,7 @@ RUN echo SKYPEWEB=${SKYPEWEB} > /tmp/status \
 
 # ---
 
-FROM bitlbee-build as telegram-build
+FROM bitlbee-build AS telegram-build
 
 ARG TELEGRAM=1
 ARG TELEGRAM_VERSION=v0.4
@@ -145,7 +145,7 @@ RUN echo TELEGRAM=${TELEGRAM} > /tmp/status \
 
 # ---
 
-FROM bitlbee-build as hangouts-build
+FROM bitlbee-build AS hangouts-build
 
 ARG HANGOUTS=0
 ARG HANGOUTS_VERSION
@@ -167,7 +167,7 @@ RUN echo HANGOUTS=${HANGOUTS} > /tmp/status \
 
 # ---
 
-FROM bitlbee-build as slack-build
+FROM bitlbee-build AS slack-build
 
 ARG SLACK=1
 ARG SLACK_VERSION
@@ -191,7 +191,7 @@ RUN echo SLACK=${SLACK} > /tmp/status \
 
 # ---
 
-FROM bitlbee-build as sipe-build
+FROM bitlbee-build AS sipe-build
 
 ARG SIPE=0
 ARG SIPE_VERSION
@@ -217,7 +217,7 @@ RUN echo SIPE=${SIPE} > /tmp/status \
 
 # ---
 
-FROM bitlbee-build as discord-build
+FROM bitlbee-build AS discord-build
 
 ARG DISCORD=1
 ARG DISCORD_VERSION
@@ -241,7 +241,7 @@ RUN echo DISCORD=${DISCORD} > /tmp/status \
 
 # ---
 
-FROM bitlbee-build as rocketchat-build
+FROM bitlbee-build AS rocketchat-build
 
 ARG ROCKETCHAT=0
 ARG ROCKETCHAT_VERSION
@@ -263,7 +263,7 @@ RUN echo ROCKETCHAT=${ROCKETCHAT} > /tmp/status \
 
 # ---
 
-FROM bitlbee-build as mastodon-build
+FROM bitlbee-build AS mastodon-build
 
 ARG MASTODON=1
 ARG MASTODON_VERSION
@@ -287,7 +287,7 @@ RUN echo MASTODON=${MASTODON} > /tmp/status \
 
 # ---
 
-FROM bitlbee-build as matrix-build
+FROM bitlbee-build AS matrix-build
 
 ARG MATRIX=0
 ARG MATRIX_VERSION
@@ -314,34 +314,58 @@ RUN echo MATRIX=${MATRIX} > /tmp/status \
 
 # ---
 
-FROM bitlbee-build as signald-build
+# FROM bitlbee-build AS signald-build
+
+# ARG SIGNAL=0
+# ARG SIGNAL_VERSION=master
+
+# RUN echo SIGNAL=${SIGNAL} > /tmp/status \
+#  && if [ ${SIGNAL} -eq 1 ]; \
+#      then cd /tmp \
+#        && apt-get update \
+#        && apt-get install -y --no-install-recommends cmake \
+#        && git clone -n https://github.com/hoehermann/purple-signald \
+#        && cd purple-signald \
+#        && git checkout ${SIGNAL_VERSION} \
+#        && git submodule init \
+#        && git submodule update \
+#        && mkdir -p build \
+#        && cd build \
+#        && cmake .. \
+#        && make -j$(nproc --ignore 2) \
+#        && make install \
+#        && strip /usr/lib/x86_64-linux-gnu/purple-2/libsignald.so; \
+#      else mkdir -p /usr/lib/x86_64-linux-gnu/purple-2 \
+#        && ln -sf /nowhere /usr/lib/x86_64-linux-gnu/purple-2/libsignald.so; \
+#     fi
+
+# ---
+
+FROM bitlbee-build AS signal-presage
 
 ARG SIGNAL=0
 ARG SIGNAL_VERSION=master
 
 RUN echo SIGNAL=${SIGNAL} > /tmp/status \
- && if [ ${SIGNAL} -eq 1 ]; \
-     then cd /tmp \
-       && apt-get update \
-       && apt-get install -y --no-install-recommends cmake \
-       && git clone -n https://github.com/hoehermann/purple-signald \
-       && cd purple-signald \
-       && git checkout ${SIGNAL_VERSION} \
-       && git submodule init \
-       && git submodule update \
-       && mkdir -p build \
-       && cd build \
-       && cmake .. \
-       && make -j$(nproc --ignore 2) \
-       && make install \
-       && strip /usr/lib/x86_64-linux-gnu/purple-2/libsignald.so; \
-     else mkdir -p /usr/lib/x86_64-linux-gnu/purple-2 \
-       && ln -sf /nowhere /usr/lib/x86_64-linux-gnu/purple-2/libsignald.so; \
+  && if [ ${SIGNAL} -eq 1 ]; \
+    then cd /tmp \
+      && apt-get update \
+      && apt-get install -y --no-install-recommends cmake libqrencode-dev protobuf-compiler curl \
+      && curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y \
+      && git clone --recurse-submodules https://github.com/hoehermann/purple-presage \
+      && mkdir purple-presage/build \
+      && cd purple-presage/build \
+      && cmake .. \
+      && cmake --build . \
+      && cmake --install . \
+      && strip /usr/lib/x86_64-linux-gnu/purple-2/libpresage.so; \
+    else mkdir -p /usr/lib/x86_64-linux-gnu/purple-2 \
+      && ln -sf /nowhere /usr/lib/x86_64-linux-gnu/purple-2/libpresage.so; \
     fi
 
 # ---
 
-FROM bitlbee-build as mattermost-build
+FROM bitlbee-build AS mattermost-build
 
 ARG MATTERMOST=0
 ARG MATTERMOST_VERSION=v2.1
@@ -363,7 +387,7 @@ RUN echo MATTERMOST=${MATTERMOST} > /tmp/status \
 
 # ---
 
-FROM bitlbee-build as icyque-build
+FROM bitlbee-build AS icyque-build
 
 ARG ICYQUE=0
 ARG ICYQUE_VERSION
@@ -383,7 +407,7 @@ RUN echo ICYQUE=${ICYQUE} > /tmp/status \
 
 # ---
 
-FROM bitlbee-build as whatsapp-build
+FROM bitlbee-build AS whatsapp-build
 
 ARG WHATSAPP=1
 ARG WHATSAPP_VERSION=v1.15.0
@@ -416,7 +440,7 @@ RUN echo WHATSAPP=${WHATSAPP} > /tmp/status \
 
 # ---
 
-FROM bitlbee-build as lurch-build
+FROM bitlbee-build AS lurch-build
 
 ARG LURCH=0
 ARG LURCH_VERSION=master
@@ -439,7 +463,7 @@ RUN echo LURCH=${LURCH} > /tmp/status \
 
 # ---
 
-FROM base-image as bitlbee-plugins
+FROM base-image AS bitlbee-plugins
 
 COPY --from=bitlbee-build /usr/sbin/bitlbee /tmp/usr/sbin/bitlbee
 COPY --from=bitlbee-build /usr/share/man/man8/bitlbee.8 /tmp/usr/share/man/man8/bitlbee.8
@@ -497,6 +521,9 @@ COPY --from=mastodon-build /tmp/status /tmp/plugin/mastodon
 # COPY --from=signald-build /usr/lib/x86_64-linux-gnu/purple-2/libsignald.so /tmp/usr/lib/x86_64-linux-gnu/purple-2/libsignald.so
 # COPY --from=signald-build /tmp/status /tmp/plugin/signald
 
+COPY --from=signal-presage /usr/lib/x86_64-linux-gnu/purple-2/libpresage.so /tmp/usr/lib/bitlbee/libpresage.so
+COPY --from=signal-presage /usr/lib/x86_64-linux-gnu/purple-2/libpurple_presage_backend.a /tmp/usr/lib/bitlbee/libpurple_presage_backend.a
+
 # COPY --from=icyque-build /usr/lib/x86_64-linux-gnu/purple-2/libicyque.so /tmp/usr/lib/x86_64-linux-gnu/purple-2/libicyque.so
 # COPY --from=icyque-build /tmp/status /tmp/plugin/icyque
 
@@ -518,7 +545,7 @@ RUN apt-get update \
 
 # ---
 
-FROM base-image as bitlbee-libpurple
+FROM base-image AS bitlbee-libpurple
 
 COPY --from=bitlbee-plugins /tmp/ /
 
@@ -527,30 +554,30 @@ ARG PKGS="tzdata libglib2.0-0 libssl3 libpurple0 libtcl8.6 libtk8.6"
 SHELL [ "/bin/bash", "-c" ]
 
 RUN groupadd -g 101 -r bitlbee \
- && useradd -u 101 -r -g bitlbee -m -d /var/lib/bitlbee bitlbee \
- && install -d -m 750 -o bitlbee -g bitlbee /var/lib/bitlbee \
- && groupadd -g 102 -r signald \
- && usermod -aG signald bitlbee \
- && source /plugins \
- && if [ ${OTR} -eq 1 ]; then PKGS="${PKGS} libotr5"; fi \
- && if [ ${FACEBOOK} -eq 1 ] || [ ${SKYPEWEB} -eq 1 ] || [ ${HANGOUTS} -eq 1 ] \
- || [ ${ROCKETCHAT} -eq 1 ] || [ ${MATRIX} -eq 1 ] || [ ${SIGNAL} -eq 1 ] \
- || [ ${ICYQUE} -eq 1 ]; then PKGS="${PKGS} libjson-glib-1.0-0"; fi \
- && if [ ${STEAM} -eq 1 ] || [ ${TELEGRAM} -eq 1 ] || [ ${MATRIX} -eq 1 ]; then PKGS="${PKGS} libgcrypt20"; fi \
- && if [ ${TELEGRAM} -eq 1 ]; then PKGS="${PKGS} zlib1g libwebp7 libpng16-16 libstdc++6"; fi \
- && if [ ${HANGOUTS} -eq 1 ] || [ ${SIGNAL} -eq 1 ]; then PKGS="${PKGS} libprotobuf-c1"; fi \
- && if [ ${SIGNAL} -eq 1 ]; then PKGS="${PKGS} libmagic1"; fi \
- && if [ ${WHATSAPP} -eq 1 ]; then PKGS="${PKGS} libopusfile-dev libgdk-pixbuf2.0-dev"; fi \
- && if [ ${SIPE} -eq 1 ]; then PKGS="${PKGS} libxml2"; fi \
- && if [ ${ROCKETCHAT} -eq 1 ]; then PKGS="${PKGS} libmarkdown2"; fi \
- && if [ ${MATRIX} -eq 1 ]; then PKGS="${PKGS} libsqlite3-0 libhttp-parser2.9 libolm2"; fi \
- && if [ ${WHATSAPP} -eq 1 ]; then PKGS="${PKGS} libgdk-pixbuf2.0-dev libopusfile-dev"; fi \
- && if [ ${LURCH} -eq 1 ]; then PKGS="${PKGS} libxml2 libmxml1 libsqlite3-0 libgcrypt20"; fi \
- && PKGS="${PKGS} vim" \
- && apt-get update \
- && apt-get install -y --no-install-recommends ${PKGS} \
- && apt-get clean \
- && rm /plugins
+  && useradd -u 101 -r -g bitlbee -m -d /var/lib/bitlbee bitlbee \
+  && install -d -m 750 -o bitlbee -g bitlbee /var/lib/bitlbee \
+  && groupadd -g 102 -r signald \
+  && usermod -aG signald bitlbee \
+  && source /plugins \
+  && if [ ${OTR} -eq 1 ]; then PKGS="${PKGS} libotr5"; fi \
+  && if [ ${FACEBOOK} -eq 1 ] || [ ${SKYPEWEB} -eq 1 ] || [ ${HANGOUTS} -eq 1 ] \
+  || [ ${ROCKETCHAT} -eq 1 ] || [ ${MATRIX} -eq 1 ] || [ ${SIGNAL} -eq 1 ] \
+  || [ ${ICYQUE} -eq 1 ]; then PKGS="${PKGS} libjson-glib-1.0-0"; fi \
+  && if [ ${STEAM} -eq 1 ] || [ ${TELEGRAM} -eq 1 ] || [ ${MATRIX} -eq 1 ]; then PKGS="${PKGS} libgcrypt20"; fi \
+  && if [ ${TELEGRAM} -eq 1 ]; then PKGS="${PKGS} zlib1g libwebp7 libpng16-16 libstdc++6"; fi \
+  && if [ ${HANGOUTS} -eq 1 ] || [ ${SIGNAL} -eq 1 ]; then PKGS="${PKGS} libprotobuf-c1"; fi \
+  && if [ ${SIGNAL} -eq 1 ]; then PKGS="${PKGS} libqrencode4"; fi \
+  && if [ ${WHATSAPP} -eq 1 ]; then PKGS="${PKGS} libopusfile-dev libgdk-pixbuf2.0-dev"; fi \
+  && if [ ${SIPE} -eq 1 ]; then PKGS="${PKGS} libxml2"; fi \
+  && if [ ${ROCKETCHAT} -eq 1 ]; then PKGS="${PKGS} libmarkdown2"; fi \
+  && if [ ${MATRIX} -eq 1 ]; then PKGS="${PKGS} libsqlite3-0 libhttp-parser2.9 libolm2"; fi \
+  && if [ ${WHATSAPP} -eq 1 ]; then PKGS="${PKGS} libgdk-pixbuf2.0-dev libopusfile-dev"; fi \
+  && if [ ${LURCH} -eq 1 ]; then PKGS="${PKGS} libxml2 libmxml1 libsqlite3-0 libgcrypt20"; fi \
+  && PKGS="${PKGS} vim libqrencode4" \
+  && apt-get update \
+  && apt-get install -y --no-install-recommends ${PKGS} \
+  && apt-get clean \
+  && rm /plugins
 
 EXPOSE 6667
 
