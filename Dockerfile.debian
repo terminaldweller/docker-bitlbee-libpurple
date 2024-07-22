@@ -343,7 +343,7 @@ RUN echo MATRIX=${MATRIX} > /tmp/status \
 
 FROM bitlbee-build AS signal-presage
 
-ARG SIGNAL=0
+ARG SIGNAL=1
 ARG SIGNAL_VERSION=master
 
 RUN echo SIGNAL=${SIGNAL} > /tmp/status \
