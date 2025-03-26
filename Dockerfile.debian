@@ -514,8 +514,8 @@ COPY --from=telegram-build /usr/local/share/metainfo/tdlib-purple.metainfo.xml /
 COPY --from=telegram-build /usr/local/share/locale /tmp/usr/local/share/locale
 COPY --from=telegram-build /tmp/status /tmp/plugin/telegram
 
-# COPY --from=hangouts-build /usr/lib/x86_64-linux-gnu/purple-2/libhangouts.so /tmp/usr/lib/x86_64-linux-gnu/purple-2/libhangouts.so
-# COPY --from=hangouts-build /tmp/status /tmp/plugin/hangouts
+COPY --from=hangouts-build /usr/lib/x86_64-linux-gnu/purple-2/libhangouts.so /tmp/usr/lib/x86_64-linux-gnu/purple-2/libhangouts.so
+COPY --from=hangouts-build /tmp/status /tmp/plugin/hangouts
 
 COPY --from=slack-build /usr/lib/x86_64-linux-gnu/purple-2/libslack.so /tmp/usr/lib/x86_64-linux-gnu/purple-2/libslack.so
 COPY --from=slack-build /tmp/status /tmp/plugin/slack
@@ -530,8 +530,8 @@ COPY --from=discord-build /usr/lib/bitlbee/discord.la /tmp/usr/lib/bitlbee/disco
 COPY --from=discord-build /usr/share/bitlbee/discord-help.txt /tmp/usr/share/bitlbee/discord-help.txt
 COPY --from=discord-build /tmp/status /tmp/plugin/discord
 
-# COPY --from=rocketchat-build /usr/lib/x86_64-linux-gnu/purple-2/librocketchat.so /tmp/usr/lib/x86_64-linux-gnu/purple-2/librocketchat.so
-# COPY --from=rocketchat-build /tmp/status /tmp/plugin/rocketchat
+COPY --from=rocketchat-build /usr/lib/x86_64-linux-gnu/purple-2/librocketchat.so /tmp/usr/lib/x86_64-linux-gnu/purple-2/librocketchat.so
+COPY --from=rocketchat-build /tmp/status /tmp/plugin/rocketchat
 
 COPY --from=mastodon-build /usr/lib/bitlbee/mastodon.so /tmp/usr/lib/bitlbee/mastodon.so
 COPY --from=mastodon-build /usr/lib/bitlbee/mastodon.la /tmp/usr/lib/bitlbee/mastodon.la
