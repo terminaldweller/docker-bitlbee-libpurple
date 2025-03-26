@@ -85,7 +85,7 @@ RUN echo STEAM=${STEAM} > /tmp/status \
 
 FROM bitlbee-build AS skypeweb-build
 
-ARG SKYPEWEB=1
+ARG SKYPEWEB=0
 ARG SKYPEWEB_VERSION
 
 RUN echo SKYPEWEB=${SKYPEWEB} > /tmp/status \
@@ -145,9 +145,32 @@ RUN echo TELEGRAM=${TELEGRAM} > /tmp/status \
 
 # ---
 
+FROM bitlbee-build AS purple-teams-build
+
+ARG PURPLETEAMS=1
+ARG PURPLETEAMS_VERSION=
+
+RUN echo PURPLETEAMS=${PURPLETEAMS} > /tmp/status \
+  && if [ ${PURPLETEAMS} -eq 1 ]; \
+    then cd /tmp \
+    && apt-get update \
+    && git clone -n https://github.com/EionRobb/purple-teams \
+    && cd purple-teams \
+    && git checkout ${PURPLETEAMS_VERSION} \
+    && make -j$(nproc --ignore 2) \
+    && make install \
+    && strip /usr/lib/x86_64-linux-gnu/purple-2/libteams.so \
+    && strip /usr/lib/x86_64-linux-gnu/purple-2/libteams-personal.so; \
+  else mkdir -p /usr/lib/x86_64-linux-gnu/purple-2 \
+    && ln -sf /nowhere /usr/lib/x86_64-linux-gnu/purple-2/libteams.so \
+    && ln -sf /nowhere /usr/lib/x86_64-linux-gnu/purple-2/libteams-personal.so; \
+  fi
+
+# ---
+
 FROM bitlbee-build AS hangouts-build
 
-ARG HANGOUTS=0
+ARG HANGOUTS=1
 ARG HANGOUTS_VERSION
 
 RUN echo HANGOUTS=${HANGOUTS} > /tmp/status \
@@ -243,7 +266,7 @@ RUN echo DISCORD=${DISCORD} > /tmp/status \
 
 FROM bitlbee-build AS rocketchat-build
 
-ARG ROCKETCHAT=0
+ARG ROCKETCHAT=1
 ARG ROCKETCHAT_VERSION
 
 RUN echo ROCKETCHAT=${ROCKETCHAT} > /tmp/status \
@@ -527,6 +550,10 @@ COPY --from=signal-presage /usr/lib/x86_64-linux-gnu/purple-2/libpresage.so /tmp
 # COPY --from=icyque-build /usr/lib/x86_64-linux-gnu/purple-2/libicyque.so /tmp/usr/lib/x86_64-linux-gnu/purple-2/libicyque.so
 # COPY --from=icyque-build /tmp/status /tmp/plugin/icyque
 
+COPY --from=purple-teams-build /usr/lib/x86_64-linux-gnu/purple-2/libteams.so /tmp/usr/lib/x86_64-linux-gnu/purple-2/libteams.so
+COPY --from=purple-teams-build /usr/lib/x86_64-linux-gnu/purple-2/libteams-personal.so /tmp/usr/lib/x86_64-linux-gnu/purple-2/libteams-personal.so
+COPY --from=purple-teams-build /tmp/status /tmp/plugin/teams
+
 COPY --from=whatsapp-build /usr/lib/x86_64-linux-gnu/purple-2/libwhatsmeow.so /tmp/usr/lib/x86_64-linux-gnu/purple-2/libwhatsmeow.so
 COPY --from=whatsapp-build /tmp/status /tmp/plugin/whatsapp
 
@@ -572,6 +599,7 @@ RUN groupadd -g 101 -r bitlbee \
   && if [ ${ROCKETCHAT} -eq 1 ]; then PKGS="${PKGS} libmarkdown2"; fi \
   && if [ ${MATRIX} -eq 1 ]; then PKGS="${PKGS} libsqlite3-0 libhttp-parser2.9 libolm2"; fi \
   && if [ ${WHATSAPP} -eq 1 ]; then PKGS="${PKGS} libgdk-pixbuf2.0-dev libopusfile-dev"; fi \
+  && if [ ${PURPLETEAMS} -eq 1 ]; then PKGS="${PKGS} libjson-glib-1.0-0"; fi \
   && if [ ${LURCH} -eq 1 ]; then PKGS="${PKGS} libxml2 libmxml1 libsqlite3-0 libgcrypt20"; fi \
   && PKGS="${PKGS} vim libqrencode4" \
   && apt-get update \
