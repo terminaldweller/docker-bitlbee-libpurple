@@ -243,23 +243,21 @@ RUN echo SIPE=${SIPE} > /tmp/status \
 FROM bitlbee-build AS discord-build
 
 ARG DISCORD=1
-ARG DISCORD_VERSION
+ARG DISCORD_VERSION=nightly-465575dda13a187f5f65ced4b11af89ffdb94351
 
 RUN echo DISCORD=${DISCORD} > /tmp/status \
  && if [ ${DISCORD} -eq 1 ]; \
      then cd /tmp \
-       && git clone -n https://github.com/sm00th/bitlbee-discord.git \
-       && cd bitlbee-discord \
+      && apt-get update \
+      && apt-get install -y --no-install-recommends libqrencode-dev libnss3-dev \
+       && git clone -n https://github.com/EionRobb/purple-discord \
+       && cd purple-discord \
        && git checkout ${DISCORD_VERSION} \
-       && ./autogen.sh \
-       && ./configure --prefix=/usr \
        && make -j$(nproc --ignore 2) \
-       && make install \
-       && strip /usr/lib/bitlbee/discord.so; \
+       && cp /tmp/purple-discord/libdiscord.so /usr/lib/x86_64-linux-gnu/purple-2/libdiscord.so \
+       && strip /usr/lib/x86_64-linux-gnu/purple-2/libdiscord.so; \
      else mkdir -p /usr/lib/bitlbee \
-       && ln -sf /nowhere /usr/lib/bitlbee/discord.so \
-       && ln -sf /nowhere /usr/lib/bitlbee/discord.la \
-       && ln -sf /nowhere /usr/share/bitlbee/discord-help.txt; \
+       && ln -sf /nowhere /usr/lib/bitlbee/libdiscord.so; \
     fi
 
 # ---
@@ -525,10 +523,10 @@ COPY --from=slack-build /tmp/status /tmp/plugin/slack
 # COPY --from=sipe-build /usr/share/locale /tmp/usr/share/locale
 # COPY --from=sipe-build /tmp/status /tmp/plugin/sipe
 
-COPY --from=discord-build /usr/lib/bitlbee/discord.so /tmp/usr/lib/bitlbee/discord.so
-COPY --from=discord-build /usr/lib/bitlbee/discord.la /tmp/usr/lib/bitlbee/discord.la
-COPY --from=discord-build /usr/share/bitlbee/discord-help.txt /tmp/usr/share/bitlbee/discord-help.txt
-COPY --from=discord-build /tmp/status /tmp/plugin/discord
+COPY --from=discord-build /usr/lib/x86_64-linux-gnu/purple-2/libdiscord.so /tmp/usr/lib/x86_64-linux-gnu/purple-2/libdiscord.so
+# COPY --from=discord-build /usr/lib/bitlbee/discord.la /tmp/usr/lib/bitlbee/discord.la
+# COPY --from=discord-build /usr/share/bitlbee/discord-help.txt /tmp/usr/share/bitlbee/discord-help.txt
+# COPY --from=discord-build /tmp/status /tmp/plugin/discord
 
 COPY --from=rocketchat-build /usr/lib/x86_64-linux-gnu/purple-2/librocketchat.so /tmp/usr/lib/x86_64-linux-gnu/purple-2/librocketchat.so
 COPY --from=rocketchat-build /tmp/status /tmp/plugin/rocketchat
@@ -594,7 +592,8 @@ RUN groupadd -g 101 -r bitlbee \
   && if [ ${STEAM} -eq 1 ] || [ ${TELEGRAM} -eq 1 ] || [ ${MATRIX} -eq 1 ]; then PKGS="${PKGS} libgcrypt20"; fi \
   && if [ ${TELEGRAM} -eq 1 ]; then PKGS="${PKGS} zlib1g libwebp7 libpng16-16 libstdc++6"; fi \
   && if [ ${HANGOUTS} -eq 1 ] || [ ${SIGNAL} -eq 1 ]; then PKGS="${PKGS} libprotobuf-c1"; fi \
-  && if [ ${SIGNAL} -eq 1 ]; then PKGS="${PKGS} libqrencode4"; fi \
+  && if [ ${SIGNAL} -eq 1 || [ ${DISCORD} -eq 1 ] ]; then PKGS="${PKGS} libqrencode4"; fi \
+  && if [ ${DISCORD} -eq 1 ]; then PKGS="%{PKGS} libnss3"; fi \
   && if [ ${WHATSAPP} -eq 1 ]; then PKGS="${PKGS} libopusfile-dev libgdk-pixbuf2.0-dev"; fi \
   && if [ ${SIPE} -eq 1 ]; then PKGS="${PKGS} libxml2"; fi \
   && if [ ${ROCKETCHAT} -eq 1 ]; then PKGS="${PKGS} libmarkdown2"; fi \
