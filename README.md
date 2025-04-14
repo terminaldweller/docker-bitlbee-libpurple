@@ -4,7 +4,7 @@ This repo is a [fork](https://github.com/ezkrg/docker-bitlbee-libpurple)
 
 **NOTE**: the alpine image is currently unmaintained.
 
-The images are built and pushed to [dockerhub](https://hub.docker.com/r/terminaldweller/bitlbee_purple) automatically via github actions.
+The images are built and pushed to [dockerhub](https://hub.docker.com/r/terminaldweller/bitlbee_purple) automatically via github workflows.
 
 This docker image includes bitlbee-libpurple with a bunch of useful plugins:
 
