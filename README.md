@@ -83,3 +83,39 @@ You can use [grype](https://github.com/anchore/grype) to check for CVEs affectin
 ```sh
 grype bitlbee-purple --scope all-layers
 ```
+
+## Debugging
+
+For debugging, you can use the docker compose file provided in the repo. Enable the plugin you want, and run.
+
+This command will run until we crash, after which it will print the backtrace and exit:
+
+```yaml
+command:
+  [
+    "gdb",
+    "-ex",
+    "'handle SIGPIPE nostop noprint pass'",
+    "-ex",
+    "run",
+    "-ex",
+    "bt",
+    "--args",
+    "/usr/sbin/bitlbee",
+    "-Dnv",
+    "-d",
+    "/var/lib/bitlbee",
+  ]
+```
+
+This command prints debug information for bitlbee:
+
+```yaml
+command:
+  [
+    "/usr/sbin/bitlbee",
+    "-Dnv",
+    "-d",
+    "/var/lib/bitlbee",
+  ]
+```

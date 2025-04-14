@@ -1,5 +1,6 @@
 # DO NOT RUN THIS FOR ANYTHING OTHER THAN DEBUGGING. SERIOUSLY.
 # https://wiki.bitlbee.org/DebuggingCrashes
+# https://wiki.bitlbee.org/Debugging
 services:
   bb_dbg:
     image: bb_dbg
@@ -22,16 +23,23 @@ services:
     ports:
       - "127.0.0.1:9667:6667"
       - "172.17.0.1:9667:6667"
+    # command:
+    #   [
+    #     "gdb",
+    #     "-ex",
+    #     "'handle SIGPIPE nostop noprint pass'",
+    #     "-ex",
+    #     "run",
+    #     "-ex",
+    #     "bt",
+    #     "--args",
+    #     "/usr/sbin/bitlbee",
+    #     "-Dnv",
+    #     "-d",
+    #     "/var/lib/bitlbee",
+    #   ]
     command:
       [
-        "gdb",
-        "-ex",
-        "'handle SIGPIPE nostop noprint pass'",
-        "-ex",
-        "run",
-        "-ex",
-        "bt",
-        "--args",
         "/usr/sbin/bitlbee",
         "-Dnv",
         "-d",
