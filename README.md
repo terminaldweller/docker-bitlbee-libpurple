@@ -29,7 +29,7 @@ for matrix, use [matrix2051](https://github.com/progval/matrix2051)
 ## Building and Running
 
 ```bash
-docker build -t bitlbee-purple .
+docker build -f ./Dockerfile.debian -t bitlbee-purple .
 ```
 
 ```bash
