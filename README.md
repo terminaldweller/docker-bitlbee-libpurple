@@ -23,6 +23,7 @@ This docker image includes bitlbee-libpurple with a bunch of useful plugins:
 - [sipe](https://github.com/tieto/sipe)
 
 for mattermost, use [matterircd](https://github.com/42wim/matterircd)
+
 for matrix, use [matrix2051](https://github.com/progval/matrix2051)
 
 ## Building and Running
@@ -56,7 +57,18 @@ services:
       - "172.17.0.1:8667:6667"
     restart: unless-stopped
     user: "bitlbee:bitlbee"
-    command: ["/usr/sbin/bitlbee", "-F","-n","-u","bitlbee","-c","/var/lib/bitlbee/bitlbee.conf", "-d","/var/lib/bitlbee"]
+    command:
+      [
+        "/usr/sbin/bitlbee",
+        "-F",
+        "-n",
+        "-u",
+        "bitlbee",
+        "-c",
+        "/var/lib/bitlbee/bitlbee.conf",
+        "-d",
+        "/var/lib/bitlbee",
+      ]
     volumes:
       - ./conf/bitlbee.conf:/var/lib/bitlbee/bitlbee.conf:ro
       - userdata:/var/lib/bitlbee
