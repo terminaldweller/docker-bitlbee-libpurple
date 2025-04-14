@@ -436,9 +436,6 @@ COPY --from=otr-install /tmp/status /tmp/plugin/otr
 # COPY --from=steam-build /usr/lib/bitlbee/steam.la /tmp/usr/lib/bitlbee/steam.la
 # COPY --from=steam-build /tmp/status /tmp/plugin/steam
 
-COPY --from=skypeweb-build /usr/lib/x86_64-linux-gnu/purple-2/libskypeweb.so /tmp/usr/lib/x86_64-linux-gnu/purple-2/libskypeweb.so
-COPY --from=skypeweb-build /tmp/status /tmp/plugin/skypeweb
-
 COPY --from=telegram-build /usr/lib/x86_64-linux-gnu/purple-2/libtelegram-tdlib.so /tmp/usr/lib/x86_64-linux-gnu/purple-2/libtelegram-tdlib.so
 COPY --from=telegram-build /usr/local/share/metainfo/tdlib-purple.metainfo.xml /tmp/usr/local/share/metainfo/tdlib-purple.metainfo.xml
 COPY --from=telegram-build /usr/local/share/locale /tmp/usr/local/share/locale
