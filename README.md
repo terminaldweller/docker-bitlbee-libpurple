@@ -17,7 +17,7 @@ This docker image includes bitlbee-libpurple with a bunch of useful plugins:
 - signal via [purple-presage](https://github.com/hoehermann/purple-presage)
 - whatsapp via [purple-gowhatsmeow](https://github.com/hoehermann/purple-gowhatsapp.git)
 - microsoft teams via [purple-teams](https://github.com/EionRobb/purple-teams)
-- icyque via [icyque](https://github.com/EionRobb/icyque)
+- [icyque](https://github.com/EionRobb/icyque)
 - [facebook](https://github.com/jgeboski/bitlbee-facebook)
 - [steam](https://github.com/jgeboski/bitlbee-steam)
 - [sipe](https://github.com/tieto/sipe)
@@ -28,11 +28,11 @@ for matrix, use [matrix2051](https://github.com/progval/matrix2051)
 
 ## Building and Running
 
-```bash
+```sh
 docker build -f ./Dockerfile.debian -t bitlbee-purple .
 ```
 
-```bash
+```sh
 docker run -p 6667:6667 --name bitlbee -v /local/path/to/configurations:/var/lib/bitlbee --restart=always --detach bitlbee-purple
 ```
 
@@ -76,4 +76,10 @@ networks:
   bitlbeenet:
 volumes:
   userdata:
+```
+
+You can use [grype](https://github.com/anchore/grype) to check for CVEs affecting the image:
+
+```sh
+grype bitlbee-purple --scope all-layers
 ```
