@@ -6,7 +6,7 @@ This repo is a [fork](https://github.com/ezkrg/docker-bitlbee-libpurple)
 
 The images are built and pushed to [dockerhub](https://hub.docker.com/r/terminaldweller/bitlbee_purple) automatically via github workflows.
 
-This docker image includes bitlbee-libpurple with a bunch of useful plugins:
+Included plugins:
 
 - telegram via [tdlib-purple](https://github.com/BenWiederhake/tdlib-purple/)
 - hangouts via [purple-hangouts](https://bitbucket.org/EionRobb/purple-hangouts)
@@ -22,9 +22,9 @@ This docker image includes bitlbee-libpurple with a bunch of useful plugins:
 - [steam](https://github.com/jgeboski/bitlbee-steam)
 - [sipe](https://github.com/tieto/sipe)
 
-for mattermost, use [matterircd](https://github.com/42wim/matterircd)
+for mattermost, use [matterircd](https://github.com/42wim/matterircd).
 
-for matrix, use [matrix2051](https://github.com/progval/matrix2051)
+for matrix, use [matrix2051](https://github.com/progval/matrix2051).
 
 ## Building and Running
 

@@ -20,7 +20,6 @@ RUN apt-get update \
  && make install-doc \
  && make install-dev \
  && make install-etc \
- && strip /usr/sbin/bitlbee \
  && touch /nowhere
 
 # ---
@@ -52,8 +51,7 @@ RUN echo FACEBOOK=${FACEBOOK} > /tmp/status \
        && git checkout ${FACEBOOK_VERSION} \
        && ./autogen.sh \
        && make -j$(nproc --ignore 2) \
-       && make install \
-       && strip /usr/lib/bitlbee/facebook.so; \
+       && make install; \
      else mkdir -p /usr/lib/bitlbee \
         && ln -sf /nowhere /usr/lib/bitlbee/facebook.so \
        && ln -sf /nowhere /usr/lib/bitlbee/facebook.la; \
@@ -74,8 +72,7 @@ RUN echo STEAM=${STEAM} > /tmp/status \
        && git checkout ${STEAM_VERSION} \
        && ./autogen.sh \
        && make -j$(nproc --ignore 2) \
-       && make install \
-       && strip /usr/lib/bitlbee/steam.so; \
+       && make install; \
      else mkdir -p /usr/lib/bitlbee \
        && ln -sf /nowhere /usr/lib/bitlbee/steam.so \
        && ln -sf /nowhere /usr/lib/bitlbee/steam.la; \
@@ -96,8 +93,7 @@ RUN echo SKYPEWEB=${SKYPEWEB} > /tmp/status \
        && git checkout ${SKYPEWEB_VERSION} \
        && cd skypeweb \
        && make -j$(nproc --ignore 2) \
-       && make install \
-       && strip /usr/lib/x86_64-linux-gnu/purple-2/libskypeweb.so; \
+       && make install; \
      else mkdir -p /usr/lib/x86_64-linux-gnu/purple-2 \
        && ln -sf /nowhere /usr/lib/x86_64-linux-gnu/purple-2/libskypeweb.so; \
     fi
@@ -106,7 +102,7 @@ RUN echo SKYPEWEB=${SKYPEWEB} > /tmp/status \
 
 FROM bitlbee-build AS telegram-build
 
-ARG TELEGRAM=1
+ARG TELEGRAM=0
 ARG TELEGRAM_VERSION=v0.4
 
 RUN echo TELEGRAM=${TELEGRAM} > /tmp/status \
@@ -116,27 +112,7 @@ RUN echo TELEGRAM=${TELEGRAM} > /tmp/status \
        && apt-get install -y --no-install-recommends cmake gperf libwebp-dev libpng-dev sudo \
        && git clone https://github.com/BenWiederhake/tdlib-purple/ \
        && cd tdlib-purple \
-       && ./build_and_install.sh \
-       # && cd tdlib-purple \
-       # && git checkout ${TELEGRAM_VERSION} \
-       # && TDLIB_REQ_VERSION=$(grep -o "tdlib version.*" CMakeLists.txt| tail -1 | awk '{print $3}') \
-       # && cd /tmp \
-       # && git clone -n https://github.com/tdlib/td.git tdlib \
-       # && cd tdlib \
-       # && TDLIB_VERSION=$(git log --pretty=format:"%h%x09%s" | grep "Update version to ${TDLIB_REQ_VERSION}" | awk '{print $1}') \
-       # && git checkout ${TDLIB_VERSION} \
-       # && mkdir build \
-       # && cd build \
-       # && cmake -DCMAKE_BUILD_TYPE=Release .. \
-       # && make -j$(nproc --ignore 2) \
-       # && make install \
-       # && cd /tmp/tdlib-purple \
-       # && mkdir build \
-       # && cd build \
-       # && cmake -DTd_DIR=/usr/local/lib/cmake/Td -DNoLottie=True -DNoVoip=True .. \
-       # && make -j$(nproc --ignore 2)\
-       # && make install \
-       && strip /usr/lib/x86_64-linux-gnu/purple-2/libtelegram-tdlib.so; \
+       && ./build_and_install.sh; \
      else mkdir -p /usr/lib/x86_64-linux-gnu/purple-2 \
        && ln -sf /nowhere /usr/lib/x86_64-linux-gnu/purple-2/libtelegram-tdlib.so \
        && ln -sf /nowhere /usr/local/share/metainfo/tdlib-purple.metainfo.xml \
@@ -147,7 +123,7 @@ RUN echo TELEGRAM=${TELEGRAM} > /tmp/status \
 
 FROM bitlbee-build AS purple-teams-build
 
-ARG PURPLETEAMS=1
+ARG PURPLETEAMS=0
 ARG PURPLETEAMS_VERSION=
 
 RUN echo PURPLETEAMS=${PURPLETEAMS} > /tmp/status \
@@ -158,9 +134,7 @@ RUN echo PURPLETEAMS=${PURPLETEAMS} > /tmp/status \
     && cd purple-teams \
     && git checkout ${PURPLETEAMS_VERSION} \
     && make -j$(nproc --ignore 2) \
-    && make install \
-    && strip /usr/lib/x86_64-linux-gnu/purple-2/libteams.so \
-    && strip /usr/lib/x86_64-linux-gnu/purple-2/libteams-personal.so; \
+    && make install; \
   else mkdir -p /usr/lib/x86_64-linux-gnu/purple-2 \
     && ln -sf /nowhere /usr/lib/x86_64-linux-gnu/purple-2/libteams.so \
     && ln -sf /nowhere /usr/lib/x86_64-linux-gnu/purple-2/libteams-personal.so; \
@@ -170,7 +144,7 @@ RUN echo PURPLETEAMS=${PURPLETEAMS} > /tmp/status \
 
 FROM bitlbee-build AS hangouts-build
 
-ARG HANGOUTS=1
+ARG HANGOUTS=0
 ARG HANGOUTS_VERSION
 
 RUN echo HANGOUTS=${HANGOUTS} > /tmp/status \
@@ -182,8 +156,7 @@ RUN echo HANGOUTS=${HANGOUTS} > /tmp/status \
        && cd purple-hangouts \
        && git checkout ${HANGOUTS_VERSION} \
        && make -j$(nproc --ignore 2) \
-       && make install \
-       && strip /usr/lib/x86_64-linux-gnu/purple-2/libhangouts.so; \
+       && make install; \
      else mkdir -p /usr/lib/x86_64-linux-gnu/purple-2 \
        && ln -sf /nowhere /usr/lib/x86_64-linux-gnu/purple-2/libhangouts.so; \
     fi
@@ -192,7 +165,7 @@ RUN echo HANGOUTS=${HANGOUTS} > /tmp/status \
 
 FROM bitlbee-build AS slack-build
 
-ARG SLACK=1
+ARG SLACK=0
 ARG SLACK_VERSION
 
 SHELL [ "/bin/bash", "-c" ]
@@ -206,8 +179,7 @@ RUN echo SLACK=${SLACK} > /tmp/status \
        && git checkout 162 \
        && make -j$(nproc --ignore 2) \
        && install -d /usr/share/pixmaps/pidgin/protocols/{16,22,48} \
-       && make install \
-       && strip /usr/lib/x86_64-linux-gnu/purple-2/libslack.so; \
+       && make install; \
      else mkdir -p /usr/lib/x86_64-linux-gnu/purple-2 \
        && ln -sf /nowhere /usr/lib/x86_64-linux-gnu/purple-2/libslack.so; \
     fi
@@ -230,8 +202,7 @@ RUN echo SIPE=${SIPE} > /tmp/status \
        && ./autogen.sh \
        && ./configure --prefix=/usr \
        && make -j$(nproc --ignore 2) \
-       && make install \
-       && strip /usr/lib/x86_64-linux-gnu/purple-2/libsipe.so; \
+       && make install; \
      else mkdir -p /usr/lib/x86_64-linux-gnu/purple-2 \
        && ln -sf /nowhere /usr/lib/x86_64-linux-gnu/purple-2/libsipe.so \
        && ln -sf /nowhere /usr/lib/x86_64-linux-gnu/purple-2/libsipe.la \
@@ -254,8 +225,7 @@ RUN echo DISCORD=${DISCORD} > /tmp/status \
        && cd purple-discord \
        && git checkout ${DISCORD_VERSION} \
        && make -j$(nproc --ignore 2) \
-       && cp /tmp/purple-discord/libdiscord.so /usr/lib/x86_64-linux-gnu/purple-2/libdiscord.so \
-       && strip /usr/lib/x86_64-linux-gnu/purple-2/libdiscord.so; \
+       && cp /tmp/purple-discord/libdiscord.so /usr/lib/x86_64-linux-gnu/purple-2/libdiscord.so; \
      else mkdir -p /usr/lib/bitlbee \
        && ln -sf /nowhere /usr/lib/bitlbee/libdiscord.so; \
     fi
@@ -264,7 +234,7 @@ RUN echo DISCORD=${DISCORD} > /tmp/status \
 
 FROM bitlbee-build AS rocketchat-build
 
-ARG ROCKETCHAT=1
+ARG ROCKETCHAT=0
 ARG ROCKETCHAT_VERSION
 
 RUN echo ROCKETCHAT=${ROCKETCHAT} > /tmp/status \
@@ -276,8 +246,7 @@ RUN echo ROCKETCHAT=${ROCKETCHAT} > /tmp/status \
        && cd purple-rocketchat \
        && git checkout ${ROCKETCHAT_VERSION} \
        && make -j$(nproc --ignore 2) \
-       && make install \
-       && strip /usr/lib/x86_64-linux-gnu/purple-2/librocketchat.so; \
+       && make install; \
      else mkdir -p /usr/lib/x86_64-linux-gnu/purple-2 \
        && ln -sf /nowhere /usr/lib/x86_64-linux-gnu/purple-2/librocketchat.so; \
     fi
@@ -286,7 +255,7 @@ RUN echo ROCKETCHAT=${ROCKETCHAT} > /tmp/status \
 
 FROM bitlbee-build AS mastodon-build
 
-ARG MASTODON=1
+ARG MASTODON=0
 ARG MASTODON_VERSION
 
 RUN echo MASTODON=${MASTODON} > /tmp/status \
@@ -298,8 +267,7 @@ RUN echo MASTODON=${MASTODON} > /tmp/status \
        && sh ./autogen.sh \
        && ./configure \
        && make -j$(nproc --ignore 2) \
-       && make install \
-       && strip /usr/lib/bitlbee/mastodon.so; \
+       && make install; \
      else mkdir -p /usr/lib/bitlbee \
        && ln -sf /nowhere /usr/lib/bitlbee/mastodon.so \
        && ln -sf /nowhere /usr/lib/bitlbee/mastodon.la \
@@ -327,44 +295,16 @@ RUN echo MATRIX=${MATRIX} > /tmp/status \
        && git checkout ${MATRIX_VERSION} \
        && if [ $(uname -m) == "armv7l" ]; then patch < ../matrix-e2e.c.patch; fi \
        && make -j$(nproc --ignore 2) \
-       && make install \
-       && strip /usr/lib/x86_64-linux-gnu/purple-2/libmatrix.so; \
+       && make install; \
      else mkdir -p /usr/lib/x86_64-linux-gnu/purple-2 \
        && ln -sf /nowhere /usr/lib/x86_64-linux-gnu/purple-2/libmatrix.so; \
     fi
 
 # ---
 
-# FROM bitlbee-build AS signald-build
-
-# ARG SIGNAL=0
-# ARG SIGNAL_VERSION=master
-
-# RUN echo SIGNAL=${SIGNAL} > /tmp/status \
-#  && if [ ${SIGNAL} -eq 1 ]; \
-#      then cd /tmp \
-#        && apt-get update \
-#        && apt-get install -y --no-install-recommends cmake \
-#        && git clone -n https://github.com/hoehermann/purple-signald \
-#        && cd purple-signald \
-#        && git checkout ${SIGNAL_VERSION} \
-#        && git submodule init \
-#        && git submodule update \
-#        && mkdir -p build \
-#        && cd build \
-#        && cmake .. \
-#        && make -j$(nproc --ignore 2) \
-#        && make install \
-#        && strip /usr/lib/x86_64-linux-gnu/purple-2/libsignald.so; \
-#      else mkdir -p /usr/lib/x86_64-linux-gnu/purple-2 \
-#        && ln -sf /nowhere /usr/lib/x86_64-linux-gnu/purple-2/libsignald.so; \
-#     fi
-
-# ---
-
 FROM bitlbee-build AS signal-presage
 
-ARG SIGNAL=1
+ARG SIGNAL=0
 ARG SIGNAL_VERSION=master
 
 RUN echo SIGNAL=${SIGNAL} > /tmp/status \
@@ -378,8 +318,7 @@ RUN echo SIGNAL=${SIGNAL} > /tmp/status \
       && cd purple-presage/build \
       && cmake .. \
       && cmake --build . \
-      && cmake --install . \
-      && strip /usr/lib/x86_64-linux-gnu/purple-2/libpresage.so; \
+      && cmake --install .; \
     else mkdir -p /usr/lib/x86_64-linux-gnu/purple-2 \
       && ln -sf /nowhere /usr/lib/x86_64-linux-gnu/purple-2/libpresage.so; \
     fi
@@ -400,8 +339,7 @@ RUN echo MATTERMOST=${MATTERMOST} > /tmp/status \
        && cd purple-mattermost \
        && git checkout ${MATTERMOST_VERSION} \
        && make -j$(nproc --ignore 2) \
-       && make install \
-       && strip /usr/lib/x86_64-linux-gnu/purple-2/libmattermost.so; \
+       && make install; \
      else mkdir -p /usr/lib/x86_64-linux-gnu/purple-2 \
        && ln -sf /nowhere /usr/lib/x86_64-linux-gnu/purple-2/libmattermost.so; \
     fi
@@ -420,8 +358,7 @@ RUN echo ICYQUE=${ICYQUE} > /tmp/status \
        && cd icyque \
        && git checkout ${ICYQUE_VERSION} \
        && make -j$(nproc --ignore 2) \
-       && make install \
-       && strip /usr/lib/x86_64-linux-gnu/purple-2/libicyque.so; \
+       && make install; \
      else mkdir -p /usr/lib/x86_64-linux-gnu/purple-2 \
        && ln -sf /nowhere /usr/lib/x86_64-linux-gnu/purple-2/libicyque.so; \
     fi
@@ -430,7 +367,7 @@ RUN echo ICYQUE=${ICYQUE} > /tmp/status \
 
 FROM bitlbee-build AS whatsapp-build
 
-ARG WHATSAPP=1
+ARG WHATSAPP=0
 ARG WHATSAPP_VERSION=v1.15.0
 
 RUN echo WHATSAPP=${WHATSAPP} > /tmp/status \
@@ -452,9 +389,7 @@ RUN echo WHATSAPP=${WHATSAPP} > /tmp/status \
        && cd build \
        && cmake .. \
        && cmake --build . \
-      # && cmake -DCMAKE_Go_COMPILER=/usr/lib/go-1.22/bin/go -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON --build \
-       && make install/strip \
-       && strip /usr/lib/x86_64-linux-gnu/purple-2/libwhatsmeow.so; \
+       && make install/strip; \
      else mkdir -p /usr/lib/x86_64-linux-gnu/purple-2 \
        && ln -sf /nowhere /usr/lib/x86_64-linux-gnu/purple-2/libwhatsmeow.so; \
     fi
@@ -507,10 +442,10 @@ COPY --from=otr-install /tmp/status /tmp/plugin/otr
 COPY --from=skypeweb-build /usr/lib/x86_64-linux-gnu/purple-2/libskypeweb.so /tmp/usr/lib/x86_64-linux-gnu/purple-2/libskypeweb.so
 COPY --from=skypeweb-build /tmp/status /tmp/plugin/skypeweb
 
-COPY --from=telegram-build /usr/lib/x86_64-linux-gnu/purple-2/libtelegram-tdlib.so /tmp/usr/lib/x86_64-linux-gnu/purple-2/libtelegram-tdlib.so
-COPY --from=telegram-build /usr/local/share/metainfo/tdlib-purple.metainfo.xml /tmp/usr/local/share/metainfo/tdlib-purple.metainfo.xml
-COPY --from=telegram-build /usr/local/share/locale /tmp/usr/local/share/locale
-COPY --from=telegram-build /tmp/status /tmp/plugin/telegram
+# COPY --from=telegram-build /usr/lib/x86_64-linux-gnu/purple-2/libtelegram-tdlib.so /tmp/usr/lib/x86_64-linux-gnu/purple-2/libtelegram-tdlib.so
+# COPY --from=telegram-build /usr/local/share/metainfo/tdlib-purple.metainfo.xml /tmp/usr/local/share/metainfo/tdlib-purple.metainfo.xml
+# COPY --from=telegram-build /usr/local/share/locale /tmp/usr/local/share/locale
+# COPY --from=telegram-build /tmp/status /tmp/plugin/telegram
 
 COPY --from=hangouts-build /usr/lib/x86_64-linux-gnu/purple-2/libhangouts.so /tmp/usr/lib/x86_64-linux-gnu/purple-2/libhangouts.so
 COPY --from=hangouts-build /tmp/status /tmp/plugin/hangouts
@@ -585,23 +520,7 @@ RUN groupadd -g 101 -r bitlbee \
   && groupadd -g 102 -r signald \
   && usermod -aG signald bitlbee \
   && source /plugins \
-  && if [ ${OTR} -eq 1 ]; then PKGS="${PKGS} libotr5"; fi \
-  && if [ ${FACEBOOK} -eq 1 ] || [ ${SKYPEWEB} -eq 1 ] || [ ${HANGOUTS} -eq 1 ] \
-  || [ ${ROCKETCHAT} -eq 1 ] || [ ${MATRIX} -eq 1 ] || [ ${SIGNAL} -eq 1 ] \
-  || [ ${ICYQUE} -eq 1 ]; then PKGS="${PKGS} libjson-glib-1.0-0"; fi \
-  && if [ ${STEAM} -eq 1 ] || [ ${TELEGRAM} -eq 1 ] || [ ${MATRIX} -eq 1 ]; then PKGS="${PKGS} libgcrypt20"; fi \
-  && if [ ${TELEGRAM} -eq 1 ]; then PKGS="${PKGS} zlib1g libwebp7 libpng16-16 libstdc++6"; fi \
-  && if [ ${HANGOUTS} -eq 1 ] || [ ${SIGNAL} -eq 1 ]; then PKGS="${PKGS} libprotobuf-c1"; fi \
-  && if [ ${SIGNAL} -eq 1 || [ ${DISCORD} -eq 1 ] ]; then PKGS="${PKGS} libqrencode4"; fi \
-  && if [ ${DISCORD} -eq 1 ]; then PKGS="%{PKGS} libnss3"; fi \
-  && if [ ${WHATSAPP} -eq 1 ]; then PKGS="${PKGS} libopusfile-dev libgdk-pixbuf2.0-dev"; fi \
-  && if [ ${SIPE} -eq 1 ]; then PKGS="${PKGS} libxml2"; fi \
-  && if [ ${ROCKETCHAT} -eq 1 ]; then PKGS="${PKGS} libmarkdown2"; fi \
-  && if [ ${MATRIX} -eq 1 ]; then PKGS="${PKGS} libsqlite3-0 libhttp-parser2.9 libolm2"; fi \
-  && if [ ${WHATSAPP} -eq 1 ]; then PKGS="${PKGS} libgdk-pixbuf2.0-dev libopusfile-dev"; fi \
-  && if [ ${PURPLETEAMS} -eq 1 ]; then PKGS="${PKGS} libjson-glib-1.0-0"; fi \
-  && if [ ${LURCH} -eq 1 ]; then PKGS="${PKGS} libxml2 libmxml1 libsqlite3-0 libgcrypt20"; fi \
-  && PKGS="${PKGS} vim libqrencode4 gdb" \
+  && PKGS="${PKGS} libotr5 libjson-glib-1.0-0 libgcrypt20 zlib1g libwebp7 libpng16-16 libstdc++6 libprotobuf-c1 libqrencode4 libnss3 libopusfile-dev libgdk-pixbuf2.0-dev libxml2 libmarkdown2 libsqlite3-0 libhttp-parser2.9 libolm2 libmxml1 vim gdb" \
   && apt-get update \
   && apt-get install -y --no-install-recommends ${PKGS} \
   && apt-get clean \

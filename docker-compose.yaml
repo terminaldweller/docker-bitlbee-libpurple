@@ -1,0 +1,52 @@
+# DO NOT RUN THIS FOR ANYTHING OTHER THAN DEBUGGING. SERIOUSLY.
+# https://wiki.bitlbee.org/DebuggingCrashes
+services:
+  bb_dbg:
+    image: bb_dbg
+    build:
+      context: .
+      dockerfile: ./Dockerfile.debug
+    deploy:
+      resources:
+        limits:
+          memory: 1024M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100m"
+    networks:
+      - bb_dbg_net
+    privileged: true
+    environment:
+      - BITLBEE_DEBUG=1
+    ports:
+      - "127.0.0.1:9667:6667"
+      - "172.17.0.1:9667:6667"
+    command:
+      [
+        "gdb",
+        "-ex",
+        "'handle SIGPIPE nostop noprint pass'",
+        "-ex",
+        "run",
+        "-ex",
+        "bt",
+        "--args",
+        "/usr/sbin/bitlbee",
+        "-Dnv",
+        "-d",
+        "/var/lib/bitlbee",
+      ]
+    volumes:
+      - bb_dbg_userdata:/var/lib/bitlbee
+      - ./gdb_commands:/gdb_commands
+      - /etc/ssl/certs:/etc/ssl/certs
+    cap_add:
+      - ALL
+    dns:
+      - 1.1.1.1
+      - 8.8.8.8
+networks:
+  bb_dbg_net:
+volumes:
+  bb_dbg_userdata:

@@ -83,30 +83,9 @@ RUN echo STEAM=${STEAM} > /tmp/status \
 
 # ---
 
-FROM bitlbee-build AS skypeweb-build
-
-ARG SKYPEWEB=0
-ARG SKYPEWEB_VERSION
-
-RUN echo SKYPEWEB=${SKYPEWEB} > /tmp/status \
- && if [ ${SKYPEWEB} -eq 1 ]; \
-     then cd /tmp \
-       && git clone -n https://github.com/EionRobb/skype4pidgin.git \
-       && cd skype4pidgin \
-       && git checkout ${SKYPEWEB_VERSION} \
-       && cd skypeweb \
-       && make -j$(nproc --ignore 2) \
-       && make install \
-       && strip /usr/lib/x86_64-linux-gnu/purple-2/libskypeweb.so; \
-     else mkdir -p /usr/lib/x86_64-linux-gnu/purple-2 \
-       && ln -sf /nowhere /usr/lib/x86_64-linux-gnu/purple-2/libskypeweb.so; \
-    fi
-
-# ---
-
 FROM bitlbee-build AS telegram-build
 
-ARG TELEGRAM=1
+ARG TELEGRAM=0
 ARG TELEGRAM_VERSION=v0.4
 
 RUN echo TELEGRAM=${TELEGRAM} > /tmp/status \
@@ -117,25 +96,6 @@ RUN echo TELEGRAM=${TELEGRAM} > /tmp/status \
        && git clone https://github.com/BenWiederhake/tdlib-purple/ \
        && cd tdlib-purple \
        && ./build_and_install.sh \
-       # && cd tdlib-purple \
-       # && git checkout ${TELEGRAM_VERSION} \
-       # && TDLIB_REQ_VERSION=$(grep -o "tdlib version.*" CMakeLists.txt| tail -1 | awk '{print $3}') \
-       # && cd /tmp \
-       # && git clone -n https://github.com/tdlib/td.git tdlib \
-       # && cd tdlib \
-       # && TDLIB_VERSION=$(git log --pretty=format:"%h%x09%s" | grep "Update version to ${TDLIB_REQ_VERSION}" | awk '{print $1}') \
-       # && git checkout ${TDLIB_VERSION} \
-       # && mkdir build \
-       # && cd build \
-       # && cmake -DCMAKE_BUILD_TYPE=Release .. \
-       # && make -j$(nproc --ignore 2) \
-       # && make install \
-       # && cd /tmp/tdlib-purple \
-       # && mkdir build \
-       # && cd build \
-       # && cmake -DTd_DIR=/usr/local/lib/cmake/Td -DNoLottie=True -DNoVoip=True .. \
-       # && make -j$(nproc --ignore 2)\
-       # && make install \
        && strip /usr/lib/x86_64-linux-gnu/purple-2/libtelegram-tdlib.so; \
      else mkdir -p /usr/lib/x86_64-linux-gnu/purple-2 \
        && ln -sf /nowhere /usr/lib/x86_64-linux-gnu/purple-2/libtelegram-tdlib.so \
@@ -335,33 +295,6 @@ RUN echo MATRIX=${MATRIX} > /tmp/status \
 
 # ---
 
-# FROM bitlbee-build AS signald-build
-
-# ARG SIGNAL=0
-# ARG SIGNAL_VERSION=master
-
-# RUN echo SIGNAL=${SIGNAL} > /tmp/status \
-#  && if [ ${SIGNAL} -eq 1 ]; \
-#      then cd /tmp \
-#        && apt-get update \
-#        && apt-get install -y --no-install-recommends cmake \
-#        && git clone -n https://github.com/hoehermann/purple-signald \
-#        && cd purple-signald \
-#        && git checkout ${SIGNAL_VERSION} \
-#        && git submodule init \
-#        && git submodule update \
-#        && mkdir -p build \
-#        && cd build \
-#        && cmake .. \
-#        && make -j$(nproc --ignore 2) \
-#        && make install \
-#        && strip /usr/lib/x86_64-linux-gnu/purple-2/libsignald.so; \
-#      else mkdir -p /usr/lib/x86_64-linux-gnu/purple-2 \
-#        && ln -sf /nowhere /usr/lib/x86_64-linux-gnu/purple-2/libsignald.so; \
-#     fi
-
-# ---
-
 FROM bitlbee-build AS signal-presage
 
 ARG SIGNAL=1
@@ -452,7 +385,6 @@ RUN echo WHATSAPP=${WHATSAPP} > /tmp/status \
        && cd build \
        && cmake .. \
        && cmake --build . \
-      # && cmake -DCMAKE_Go_COMPILER=/usr/lib/go-1.22/bin/go -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON --build \
        && make install/strip \
        && strip /usr/lib/x86_64-linux-gnu/purple-2/libwhatsmeow.so; \
      else mkdir -p /usr/lib/x86_64-linux-gnu/purple-2 \
@@ -524,9 +456,6 @@ COPY --from=slack-build /tmp/status /tmp/plugin/slack
 # COPY --from=sipe-build /tmp/status /tmp/plugin/sipe
 
 COPY --from=discord-build /usr/lib/x86_64-linux-gnu/purple-2/libdiscord.so /tmp/usr/lib/x86_64-linux-gnu/purple-2/libdiscord.so
-# COPY --from=discord-build /usr/lib/bitlbee/discord.la /tmp/usr/lib/bitlbee/discord.la
-# COPY --from=discord-build /usr/share/bitlbee/discord-help.txt /tmp/usr/share/bitlbee/discord-help.txt
-# COPY --from=discord-build /tmp/status /tmp/plugin/discord
 
 COPY --from=rocketchat-build /usr/lib/x86_64-linux-gnu/purple-2/librocketchat.so /tmp/usr/lib/x86_64-linux-gnu/purple-2/librocketchat.so
 COPY --from=rocketchat-build /tmp/status /tmp/plugin/rocketchat
@@ -536,15 +465,7 @@ COPY --from=mastodon-build /usr/lib/bitlbee/mastodon.la /tmp/usr/lib/bitlbee/mas
 COPY --from=mastodon-build /usr/share/bitlbee/mastodon-help.txt /tmp/usr/share/bitlbee/mastodon-help.txt
 COPY --from=mastodon-build /tmp/status /tmp/plugin/mastodon
 
-# COPY --from=matrix-build /usr/lib/x86_64-linux-gnu/purple-2/libmatrix.so /tmp/usr/lib/x86_64-linux-gnu/purple-2/libmatrix.so
-# COPY --from=matrix-build /tmp/status /tmp/plugin/matrix
-
-# COPY --from=signald-build /usr/lib/x86_64-linux-gnu/purple-2/libsignald.so /tmp/usr/lib/x86_64-linux-gnu/purple-2/libsignald.so
-# COPY --from=signald-build /tmp/status /tmp/plugin/signald
-
-# COPY --from=signal-presage /usr/lib/x86_64-linux-gnu/purple-2/libpresage.so /tmp/usr/lib/bitlbee/libpresage.so
 COPY --from=signal-presage /usr/lib/x86_64-linux-gnu/purple-2/libpresage.so /tmp/usr/lib/x86_64-linux-gnu/purple-2/libpresage.so
-# COPY --from=signal-presage /usr/lib/x86_64-linux-gnu/purple-2/libpurple_presage_backend.a /tmp/usr/lib/bitlbee/libpurple_presage_backend.a
 
 # COPY --from=icyque-build /usr/lib/x86_64-linux-gnu/purple-2/libicyque.so /tmp/usr/lib/x86_64-linux-gnu/purple-2/libicyque.so
 # COPY --from=icyque-build /tmp/status /tmp/plugin/icyque
@@ -606,7 +527,5 @@ RUN groupadd -g 101 -r bitlbee \
   && apt-get install -y --no-install-recommends ${PKGS} \
   && apt-get clean \
   && rm /plugins
-
-EXPOSE 6667
 
 # CMD [ "/usr/sbin/bitlbee", "-F", "-n", "-u", "bitlbee" ]
