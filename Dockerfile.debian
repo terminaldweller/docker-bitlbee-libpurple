@@ -85,7 +85,7 @@ RUN echo STEAM=${STEAM} > /tmp/status \
 
 FROM bitlbee-build AS telegram-build
 
-ARG TELEGRAM=0
+ARG TELEGRAM=1
 ARG TELEGRAM_VERSION=v0.4
 
 RUN echo TELEGRAM=${TELEGRAM} > /tmp/status \
@@ -364,14 +364,14 @@ RUN echo ICYQUE=${ICYQUE} > /tmp/status \
 FROM bitlbee-build AS whatsapp-build
 
 ARG WHATSAPP=1
-ARG WHATSAPP_VERSION=v1.15.0
+ARG WHATSAPP_VERSION=v1.18.0
 
 RUN echo WHATSAPP=${WHATSAPP} > /tmp/status \
  && if [ ${WHATSAPP} -eq 1 ]; \
      then cd /tmp \
       && apt-get install -y wget \
-      && wget -q https://go.dev/dl/go1.22.4.linux-amd64.tar.gz \
-      && tar -C /usr/local -xzf go1.22.4.linux-amd64.tar.gz \
+      && wget -q https://go.dev/dl/go1.24.2.linux-amd64.tar.gz \
+      && tar -C /usr/local -xzf go1.24.2.linux-amd64.tar.gz \
        && echo "deb http://deb.debian.org/debian bookworm-backports main" | tee -a /etc/apt/sources.list \
        && apt-get update \
       && apt-get install -y -t bookworm-backports \
