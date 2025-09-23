@@ -1,4 +1,4 @@
-FROM debian:bookworm-slim AS base-image
+FROM debian:trixie-slim AS base-image
 
 FROM base-image AS bitlbee-build
 
@@ -203,7 +203,7 @@ RUN echo SIPE=${SIPE} > /tmp/status \
 FROM bitlbee-build AS discord-build
 
 ARG DISCORD=1
-ARG DISCORD_VERSION=nightly-465575dda13a187f5f65ced4b11af89ffdb94351
+ARG DISCORD_VERSION=nightly-7de7f99198d978c14479a9ba20a8ec3bb128471e
 
 RUN echo DISCORD=${DISCORD} > /tmp/status \
  && if [ ${DISCORD} -eq 1 ]; \
@@ -364,18 +364,18 @@ RUN echo ICYQUE=${ICYQUE} > /tmp/status \
 FROM bitlbee-build AS whatsapp-build
 
 ARG WHATSAPP=1
-ARG WHATSAPP_VERSION=v1.18.0
+ARG WHATSAPP_VERSION=v1.20.0
 
 RUN echo WHATSAPP=${WHATSAPP} > /tmp/status \
  && if [ ${WHATSAPP} -eq 1 ]; \
      then cd /tmp \
       && apt-get install -y wget \
-      && wget -q https://go.dev/dl/go1.24.2.linux-amd64.tar.gz \
-      && tar -C /usr/local -xzf go1.24.2.linux-amd64.tar.gz \
+      && wget -q https://go.dev/dl/go1.25.1.linux-amd64.tar.gz \
+      && tar -C /usr/local -xzf go1.25.1.linux-amd64.tar.gz \
        && echo "deb http://deb.debian.org/debian bookworm-backports main" | tee -a /etc/apt/sources.list \
        && apt-get update \
-      && apt-get install -y -t bookworm-backports \
-       && apt-get install -y --no-install-recommends cmake pkg-config libgdk-pixbuf2.0-dev libopusfile-dev \
+       && apt-get install -y -t bookworm-backports \
+       && apt-get install -y --no-install-recommends cmake pkg-config libgdk-pixbuf-2.0-dev libopusfile-dev \
        && git clone -n https://github.com/hoehermann/purple-gowhatsapp.git \
        && cd purple-gowhatsapp \
        && git checkout ${WHATSAPP_VERSION} \
@@ -512,11 +512,11 @@ RUN groupadd -g 101 -r bitlbee \
   && if [ ${HANGOUTS} -eq 1 ] || [ ${SIGNAL} -eq 1 ]; then PKGS="${PKGS} libprotobuf-c1"; fi \
   && if [ ${SIGNAL} -eq 1 || [ ${DISCORD} -eq 1 ] ]; then PKGS="${PKGS} libqrencode4"; fi \
   && if [ ${DISCORD} -eq 1 ]; then PKGS="%{PKGS} libnss3"; fi \
-  && if [ ${WHATSAPP} -eq 1 ]; then PKGS="${PKGS} libopusfile-dev libgdk-pixbuf2.0-dev"; fi \
+  && if [ ${WHATSAPP} -eq 1 ]; then PKGS="${PKGS} libopusfile-dev libgdk-pixbuf-2.0-dev"; fi \
   && if [ ${SIPE} -eq 1 ]; then PKGS="${PKGS} libxml2"; fi \
   && if [ ${ROCKETCHAT} -eq 1 ]; then PKGS="${PKGS} libmarkdown2"; fi \
   && if [ ${MATRIX} -eq 1 ]; then PKGS="${PKGS} libsqlite3-0 libhttp-parser2.9 libolm2"; fi \
-  && if [ ${WHATSAPP} -eq 1 ]; then PKGS="${PKGS} libgdk-pixbuf2.0-dev libopusfile-dev"; fi \
+  && if [ ${WHATSAPP} -eq 1 ]; then PKGS="${PKGS} libgdk-pixbuf-2.0-dev libopusfile-dev"; fi \
   && if [ ${PURPLETEAMS} -eq 1 ]; then PKGS="${PKGS} libjson-glib-1.0-0"; fi \
   && if [ ${LURCH} -eq 1 ]; then PKGS="${PKGS} libxml2 libmxml1 libsqlite3-0 libgcrypt20"; fi \
   && PKGS="${PKGS} vim libqrencode4" \
