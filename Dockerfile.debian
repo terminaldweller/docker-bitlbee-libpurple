@@ -203,7 +203,7 @@ RUN echo SIPE=${SIPE} > /tmp/status \
 FROM bitlbee-build AS discord-build
 
 ARG DISCORD=1
-ARG DISCORD_VERSION=nightly-7de7f99198d978c14479a9ba20a8ec3bb128471e
+ARG DISCORD_VERSION=nightly-a04cdf4f7f74dea826110e3b8a83fa11fcd484f0
 
 RUN echo DISCORD=${DISCORD} > /tmp/status \
  && if [ ${DISCORD} -eq 1 ]; \
@@ -364,7 +364,7 @@ RUN echo ICYQUE=${ICYQUE} > /tmp/status \
 FROM bitlbee-build AS whatsapp-build
 
 ARG WHATSAPP=1
-ARG WHATSAPP_VERSION=v1.20.0
+ARG WHATSAPP_VERSION=nightly-0d4a85b450ccbc5061c5b052da857b27f9c040f8
 
 RUN echo WHATSAPP=${WHATSAPP} > /tmp/status \
  && if [ ${WHATSAPP} -eq 1 ]; \
@@ -523,6 +523,7 @@ RUN groupadd -g 101 -r bitlbee \
   && apt-get update \
   && apt-get install -y --no-install-recommends ${PKGS} \
   && apt-get clean \
-  && rm /plugins
+  && rm /plugins \
+  && ln -sf /dev/null /var/lib/bitlbee/crash.log
 
 # CMD [ "/usr/sbin/bitlbee", "-F", "-n", "-u", "bitlbee" ]
