@@ -3,6 +3,7 @@ FROM debian:trixie-slim AS base-image
 FROM base-image AS bitlbee-build
 
 ARG BITLBEE_VERSION=3.6-1
+# ARG BITLBEE_VERSION=master
 
 ENV PYTHON=/usr/bin/python3
 
@@ -364,14 +365,14 @@ RUN echo ICYQUE=${ICYQUE} > /tmp/status \
 FROM bitlbee-build AS whatsapp-build
 
 ARG WHATSAPP=1
-ARG WHATSAPP_VERSION=nightly-0d4a85b450ccbc5061c5b052da857b27f9c040f8
+ARG WHATSAPP_VERSION=nightly-e033cae8f5dc039df686af2c9569e7e504617880
 
 RUN echo WHATSAPP=${WHATSAPP} > /tmp/status \
  && if [ ${WHATSAPP} -eq 1 ]; \
      then cd /tmp \
       && apt-get install -y wget \
-      && wget -q https://go.dev/dl/go1.25.1.linux-amd64.tar.gz \
-      && tar -C /usr/local -xzf go1.25.1.linux-amd64.tar.gz \
+      && wget -q https://go.dev/dl/go1.25.4.linux-amd64.tar.gz \
+      && tar -C /usr/local -xzf go1.25.4.linux-amd64.tar.gz \
        && echo "deb http://deb.debian.org/debian bookworm-backports main" | tee -a /etc/apt/sources.list \
        && apt-get update \
        && apt-get install -y -t bookworm-backports \
