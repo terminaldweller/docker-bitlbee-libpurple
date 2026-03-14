@@ -377,9 +377,9 @@ RUN echo WHATSAPP=${WHATSAPP} > /tmp/status \
       && apt-get install -y wget clang \
       && wget -q https://go.dev/dl/go1.25.8.linux-amd64.tar.gz \
       && tar -C /usr/local -xzf go1.25.8.linux-amd64.tar.gz \
-       && echo "deb http://deb.debian.org/debian bookworm-backports main" | tee -a /etc/apt/sources.list \
+       && echo "deb http://deb.debian.org/debian trixie-backports main" | tee -a /etc/apt/sources.list \
        && apt-get update \
-       && apt-get install -y -t bookworm-backports \
+       && apt-get install -y -t trixie-backports \
        && apt-get install -y --no-install-recommends cmake pkg-config libgdk-pixbuf-2.0-dev libopusfile-dev \
        && git clone -n https://github.com/hoehermann/purple-gowhatsapp.git \
        && cd purple-gowhatsapp \
@@ -406,7 +406,7 @@ ARG LURCH_VERSION=master
 RUN echo LURCH=${LURCH} > /tmp/status \
  && if [ ${LURCH} -eq 1 ]; \
      then cd /tmp \
-       && echo "deb http://deb.debian.org/debian bookworm-backports main" | tee -a /etc/apt/sources.list \
+       && echo "deb http://deb.debian.org/debian trixie-backports main" | tee -a /etc/apt/sources.list \
        && apt-get update \
        && apt-get install -y git cmake libpurple-dev libmxml-dev libxml2-dev libsqlite3-dev libgcrypt20-dev build-essential \
        && git clone -n https://github.com/gkdr/lurch \
