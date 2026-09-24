@@ -1,4 +1,4 @@
-FROM debian:bookworm-slim AS base-image
+FROM debian:trixie-slim AS base-image
 
 FROM base-image AS bitlbee-build
 
@@ -304,21 +304,25 @@ RUN echo MATRIX=${MATRIX} > /tmp/status \
 
 FROM bitlbee-build AS signal-presage
 
-ARG SIGNAL=0
-ARG SIGNAL_VERSION=master
+ARG SIGNAL=1
+ARG SIGNAL_VERSION=nightly-20260311-fe3ed54
 
+ENV RUSTFLAGS="-l stdc++"
 RUN echo SIGNAL=${SIGNAL} > /tmp/status \
   && if [ ${SIGNAL} -eq 1 ]; \
     then cd /tmp \
       && apt-get update \
-      && apt-get install -y --no-install-recommends cmake libqrencode-dev protobuf-compiler curl \
+      && apt-get install -y --no-install-recommends cmake libqrencode-dev protobuf-compiler curl libclang-dev \
       && curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y \
       && git clone --recurse-submodules https://github.com/hoehermann/purple-presage \
       && mkdir purple-presage/build \
-      && cd purple-presage/build \
+      && cd purple-presage \
+      && git checkout ${SIGNAL_VERSION} \
+      && cd build \
       && cmake .. \
       && cmake --build . \
-      && cmake --install .; \
+      && cmake --install . \
+      && strip /usr/lib/x86_64-linux-gnu/purple-2/libpresage.so; \
     else mkdir -p /usr/lib/x86_64-linux-gnu/purple-2 \
       && ln -sf /nowhere /usr/lib/x86_64-linux-gnu/purple-2/libpresage.so; \
     fi
@@ -367,19 +371,19 @@ RUN echo ICYQUE=${ICYQUE} > /tmp/status \
 
 FROM bitlbee-build AS whatsapp-build
 
-ARG WHATSAPP=0
-ARG WHATSAPP_VERSION=v1.15.0
+ARG WHATSAPP=1
+ARG WHATSAPP_VERSION=nightly-20260208
 
 RUN echo WHATSAPP=${WHATSAPP} > /tmp/status \
  && if [ ${WHATSAPP} -eq 1 ]; \
      then cd /tmp \
-      && apt-get install -y wget \
-      && wget -q https://go.dev/dl/go1.22.4.linux-amd64.tar.gz \
-      && tar -C /usr/local -xzf go1.22.4.linux-amd64.tar.gz \
-       && echo "deb http://deb.debian.org/debian bookworm-backports main" | tee -a /etc/apt/sources.list \
+      && apt-get install -y wget clang \
+      && wget -q https://go.dev/dl/go1.25.8.linux-amd64.tar.gz \
+      && tar -C /usr/local -xzf go1.25.8.linux-amd64.tar.gz \
+       && echo "deb http://deb.debian.org/debian trixie-backports main" | tee -a /etc/apt/sources.list \
        && apt-get update \
-      && apt-get install -y -t bookworm-backports \
-       && apt-get install -y --no-install-recommends cmake pkg-config libgdk-pixbuf2.0-dev libopusfile-dev \
+       && apt-get install -y -t trixie-backports \
+       && apt-get install -y --no-install-recommends cmake pkg-config libgdk-pixbuf-2.0-dev libopusfile-dev \
        && git clone -n https://github.com/hoehermann/purple-gowhatsapp.git \
        && cd purple-gowhatsapp \
        && git checkout ${WHATSAPP_VERSION} \
@@ -389,11 +393,11 @@ RUN echo WHATSAPP=${WHATSAPP} > /tmp/status \
        && cd build \
        && cmake .. \
        && cmake --build . \
-       && make install/strip; \
+       && make install/strip \
+       && strip /usr/lib/x86_64-linux-gnu/purple-2/libwhatsmeow.so; \
      else mkdir -p /usr/lib/x86_64-linux-gnu/purple-2 \
        && ln -sf /nowhere /usr/lib/x86_64-linux-gnu/purple-2/libwhatsmeow.so; \
     fi
-
 # ---
 
 FROM bitlbee-build AS lurch-build
@@ -404,7 +408,7 @@ ARG LURCH_VERSION=master
 RUN echo LURCH=${LURCH} > /tmp/status \
  && if [ ${LURCH} -eq 1 ]; \
      then cd /tmp \
-       && echo "deb http://deb.debian.org/debian bookworm-backports main" | tee -a /etc/apt/sources.list \
+       && echo "deb http://deb.debian.org/debian trixie-backports main" | tee -a /etc/apt/sources.list \
        && apt-get update \
        && apt-get install -y git cmake libpurple-dev libmxml-dev libxml2-dev libsqlite3-dev libgcrypt20-dev build-essential \
        && git clone -n https://github.com/gkdr/lurch \
@@ -520,7 +524,7 @@ RUN groupadd -g 101 -r bitlbee \
   && groupadd -g 102 -r signald \
   && usermod -aG signald bitlbee \
   && source /plugins \
-  && PKGS="${PKGS} libotr5 libjson-glib-1.0-0 libgcrypt20 zlib1g libwebp7 libpng16-16 libstdc++6 libprotobuf-c1 libqrencode4 libnss3 libopusfile-dev libgdk-pixbuf2.0-dev libxml2 libmarkdown2 libsqlite3-0 libhttp-parser2.9 libolm2 libmxml1 vim gdb" \
+  && PKGS="${PKGS} libotr5 libjson-glib-1.0-0 libgcrypt20 zlib1g libwebp7 libpng16-16 libstdc++6 libprotobuf-c1 libqrencode4 libnss3 libopusfile-dev libgdk-pixbuf-2.0-dev libxml2 libmarkdown2 libsqlite3-0 libhttp-parser2.9 libmxml1 vim gdb libclang-dev" \
   && apt-get update \
   && apt-get install -y --no-install-recommends ${PKGS} \
   && apt-get clean \

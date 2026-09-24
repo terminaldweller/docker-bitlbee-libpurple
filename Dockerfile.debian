@@ -88,14 +88,14 @@ RUN echo STEAM=${STEAM} > /tmp/status \
 FROM bitlbee-build AS telegram-build
 
 ARG TELEGRAM=1
-ARG TELEGRAM_VERSION=v0.4
+ARG TELEGRAM_VERSION=tdlib-purple-v2.1.1
 
 RUN echo TELEGRAM=${TELEGRAM} > /tmp/status \
  && if [ ${TELEGRAM} -eq 1 ]; \
      then cd /tmp \
        && apt-get update \
        && apt-get install -y --no-install-recommends cmake gperf libwebp-dev libpng-dev sudo \
-       && git clone https://github.com/BenWiederhake/tdlib-purple/ \
+       && git clone https://github.com/adrighem/tdlib-purple \
        && cd tdlib-purple \
        && ./build_and_install.sh \
        && strip /usr/lib/x86_64-linux-gnu/purple-2/libtelegram-tdlib.so; \
@@ -110,7 +110,8 @@ RUN echo TELEGRAM=${TELEGRAM} > /tmp/status \
 FROM bitlbee-build AS purple-teams-build
 
 ARG PURPLETEAMS=1
-ARG PURPLETEAMS_VERSION=
+ARG PURPLETEAMS_VERSION="daily-2026-06-15"
+# ARG PURPLETEAMS_VERSION="daily-2026-09-06"
 
 RUN echo PURPLETEAMS=${PURPLETEAMS} > /tmp/status \
   && if [ ${PURPLETEAMS} -eq 1 ]; \
@@ -205,7 +206,8 @@ RUN echo SIPE=${SIPE} > /tmp/status \
 FROM bitlbee-build AS discord-build
 
 ARG DISCORD=1
-ARG DISCORD_VERSION=nightly-a04cdf4f7f74dea826110e3b8a83fa11fcd484f0
+#ARG DISCORD_VERSION=nightly-a04cdf4f7f74dea826110e3b8a83fa11fcd484f0
+ARG DISCORD_VERSION="daily-2026-03-29"
 
 RUN echo DISCORD=${DISCORD} > /tmp/status \
  && if [ ${DISCORD} -eq 1 ]; \
@@ -300,7 +302,9 @@ RUN echo MATRIX=${MATRIX} > /tmp/status \
 FROM bitlbee-build AS signal-presage
 
 ARG SIGNAL=1
-ARG SIGNAL_VERSION=nightly-20260311-fe3ed54
+#ARG SIGNAL_VERSION=nightly-20260311-fe3ed54
+#ARG SIGNAL_VERSION=nightly-20260502-7bbaf1a
+ARG SIGNAL_VERSION=nightly-20260810-f74b96e
 
 ENV RUSTFLAGS="-l stdc++"
 RUN echo SIGNAL=${SIGNAL} > /tmp/status \
@@ -369,14 +373,16 @@ RUN echo ICYQUE=${ICYQUE} > /tmp/status \
 FROM bitlbee-build AS whatsapp-build
 
 ARG WHATSAPP=1
-ARG WHATSAPP_VERSION=nightly-20260208
+#ARG WHATSAPP_VERSION=nightly-20260208
+#ARG WHATSAPP_VERSION=nightly-20260418
+ARG WHATSAPP_VERSION=nightly-20260917
 
 RUN echo WHATSAPP=${WHATSAPP} > /tmp/status \
  && if [ ${WHATSAPP} -eq 1 ]; \
      then cd /tmp \
       && apt-get install -y wget clang \
-      && wget -q https://go.dev/dl/go1.25.8.linux-amd64.tar.gz \
-      && tar -C /usr/local -xzf go1.25.8.linux-amd64.tar.gz \
+      && wget -q https://go.dev/dl/go1.26.5.linux-amd64.tar.gz \
+      && tar -C /usr/local -xzf go1.26.5.linux-amd64.tar.gz \
        && echo "deb http://deb.debian.org/debian trixie-backports main" | tee -a /etc/apt/sources.list \
        && apt-get update \
        && apt-get install -y -t trixie-backports \
@@ -527,7 +533,7 @@ RUN groupadd -g 101 -r bitlbee \
   && if [ ${LURCH} -eq 1 ]; then PKGS="${PKGS} libxml2 libmxml1 libsqlite3-0 libgcrypt20"; fi \
   && PKGS="${PKGS} vim libqrencode4" \
   && apt-get update \
-  && apt-get install -y --no-install-recommends proxychains-ng ${PKGS} \
+  && apt-get install -y --no-install-recommends proxychains-ng ${PKGS} bind9-dnsutils socat iputils-ping curl traceroute \
   && apt-get clean \
   && rm /plugins \
   && ln -sf /dev/null /var/lib/bitlbee/crash.log
